@@ -23,7 +23,8 @@ namespace App1
     public enum DisplayFrameType
     {
         Infrared,
-        Color
+        Color,
+        Depth
     }
 
     /// <summary>
@@ -40,8 +41,12 @@ namespace App1
         private FrameDescription currentFD;
         private DisplayFrameType currentDFT;
         private string statusText;
+
         private ushort[] irData;
         private byte[] irDataConverted;
+
+        private ushort[] depthData;
+        private byte[] depthPixels;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -99,7 +104,7 @@ namespace App1
             setupCurrentDisplay(DEFAULT_DISPLAYFRAMETYPE);
 
             reader = sensor.OpenMultiSourceFrameReader(
-                FrameSourceTypes.Infrared | FrameSourceTypes.Color);
+                FrameSourceTypes.Infrared | FrameSourceTypes.Color | FrameSourceTypes.Depth);
             reader.MultiSourceFrameArrived += multiSourceFrameArrived;
             
             // Set Is available changed event notifier
@@ -132,6 +137,14 @@ namespace App1
                             multiSourceFrame.ColorFrameReference.AcquireFrame())
                         {
                             showColorFrame(colorFrame);
+                        }
+                        break;
+
+                    case DisplayFrameType.Depth:
+                        using (DepthFrame depthFrame = 
+                            multiSourceFrame.DepthFrameReference.AcquireFrame())
+                        {
+                            showDepthFrame(depthFrame);
                         }
                         break;
 
@@ -204,6 +217,58 @@ namespace App1
             }
         }
 
+        private void showDepthFrame(DepthFrame depthFrame)
+        {
+            bool depthFrameProcessed = false;
+            ushort minDepth = 0;
+            ushort maxDepth = 0;
+
+            if (depthFrame != null)
+            {
+                FrameDescription depthFD = 
+                    depthFrame.FrameDescription;
+
+                // Verify data and write the new infrared frame data 
+                // to the display bitmap
+                if ((depthFD.Width * depthFD.Height == depthData.Length) && 
+                        (depthFD.Width == bitmap.PixelWidth) && 
+                        (depthFD.Height == bitmap.PixelHeight))
+                {
+                    depthFrame.CopyFrameDataToArray(depthData);
+
+                    minDepth = depthFrame.DepthMinReliableDistance;
+                    maxDepth = depthFrame.DepthMaxReliableDistance;
+
+                    depthFrameProcessed = true;
+                }
+            }
+
+            if (depthFrameProcessed)
+            {
+                convertDepthDataToPixels(minDepth, maxDepth);
+                renderPixelArray(depthPixels);
+            }
+        }
+
+        private void convertDepthDataToPixels(ushort minDepth, ushort maxDepth)
+        {
+            int colorPixelIndex = 0;
+            int mapDepthToByte = maxDepth / 256;
+
+            for (int i = 0; i < depthData.Length; i++)
+            {
+                ushort depth = depthData[i];
+
+                byte intensity = (byte)(depth >= minDepth && 
+                    depth <= maxDepth ? (depth / mapDepthToByte) : 0);
+                
+                depthPixels[colorPixelIndex++] = intensity;
+                depthPixels[colorPixelIndex++] = intensity;
+                depthPixels[colorPixelIndex++] = intensity;
+                depthPixels[colorPixelIndex++] = 255;
+            }
+        }
+
         private void convertIrDataToPixelData()
         {
             for (int i = 0; i < irData.Length; i++)
@@ -251,6 +316,15 @@ namespace App1
                     // Create the bitmap to display
                     bitmap = new WriteableBitmap(colorFD.Width, colorFD.Height);
                     break;
+                    
+                case DisplayFrameType.Depth:
+                    FrameDescription depthFD = 
+                        sensor.DepthFrameSource.FrameDescription;
+                    CurrentFD = depthFD;
+                    depthData = new ushort[depthFD.Width * depthFD.Height];
+                    depthPixels = new byte[depthFD.Width * depthFD.Height * BYTESPERPIXEL];
+                    bitmap = new WriteableBitmap(depthFD.Width, depthFD.Height);
+                    break;
 
                 default:
                     break;
@@ -271,6 +345,11 @@ namespace App1
         private void ColorButton_Click(object sender, RoutedEventArgs e)
         {
             setupCurrentDisplay(DisplayFrameType.Color);
+        }
+
+        private void DepthButton_Click(object sender, RoutedEventArgs e)
+        {
+            setupCurrentDisplay(DisplayFrameType.Depth);
         }
     }
 }
