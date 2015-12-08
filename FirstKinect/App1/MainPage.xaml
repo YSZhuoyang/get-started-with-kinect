@@ -63,6 +63,10 @@
                     <Button Content="Depth" Style="{StaticResource 
                         FrameSelectorButtonStyle}"
                         Click="DepthButton_Click"/>
+                    <Button Style="{StaticResource 
+                        FrameSelectorButtonStyle}" Click="BodyMask_Click">
+                        <TextBlock Text="Body Mask" TextWrapping="Wrap"/>
+                    </Button>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

@@ -15,6 +15,10 @@ using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Media.Imaging;
 using WindowsPreview.Kinect;
 using System.ComponentModel;
+using Windows.Storage.Streams;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -24,7 +28,8 @@ namespace App1
     {
         Infrared,
         Color,
-        Depth
+        Depth,
+        BodyMask
     }
 
     /// <summary>
@@ -39,14 +44,24 @@ namespace App1
         private MultiSourceFrameReader reader;
         private WriteableBitmap bitmap;
         private FrameDescription currentFD;
+
+        // Work as a helper to address the problem that 
+        // resolutions of color feeds and depth feeds are different
+        private CoordinateMapper coordinateMapper;
+
         private DisplayFrameType currentDFT;
         private string statusText;
 
+        // Infrared data
         private ushort[] irData;
         private byte[] irDataConverted;
 
+        // Depth data
         private ushort[] depthData;
         private byte[] depthPixels;
+
+        // BodyMask Frames
+        private DepthSpacePoint[] colorMappedToDepthPoints;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -100,11 +115,15 @@ namespace App1
         private void mainpage_loaded(object sender, RoutedEventArgs e)
         {
             sensor = KinectSensor.GetDefault();
-            
+            coordinateMapper = sensor.CoordinateMapper;
+
             setupCurrentDisplay(DEFAULT_DISPLAYFRAMETYPE);
 
             reader = sensor.OpenMultiSourceFrameReader(
-                FrameSourceTypes.Infrared | FrameSourceTypes.Color | FrameSourceTypes.Depth);
+                FrameSourceTypes.Infrared | 
+                FrameSourceTypes.Color | 
+                FrameSourceTypes.Depth |
+                FrameSourceTypes.BodyIndex);
             reader.MultiSourceFrameArrived += multiSourceFrameArrived;
             
             // Set Is available changed event notifier
@@ -119,13 +138,24 @@ namespace App1
         private void multiSourceFrameArrived(MultiSourceFrameReader sender, MultiSourceFrameArrivedEventArgs args)
         {
             MultiSourceFrame multiSourceFrame = args.FrameReference.AcquireFrame();
-
+            
             if (multiSourceFrame != null)
             {
+                DepthFrame depthFrame = null;
+                ColorFrame colorFrame = null;
+                InfraredFrame infraredFrame = null;
+                BodyIndexFrame bodyIndexFrame = null;
+
+                IBuffer depthFrameDataBuffer = null;
+                IBuffer bodyIndexFrameDataBuffer = null;
+
+                // COM interface for unsafe byte manipulation
+                IBufferByteAccess bodyIndexByteAccess = null;
+                
                 switch (currentDFT)
                 {
                     case DisplayFrameType.Infrared:
-                        using (InfraredFrame infraredFrame =
+                        using (infraredFrame =
                             multiSourceFrame.InfraredFrameReference.AcquireFrame())
                         {
                             showInfraredFrame(infraredFrame);
@@ -133,7 +163,7 @@ namespace App1
                         break;
 
                     case DisplayFrameType.Color:
-                        using (ColorFrame colorFrame =
+                        using (colorFrame =
                             multiSourceFrame.ColorFrameReference.AcquireFrame())
                         {
                             showColorFrame(colorFrame);
@@ -141,10 +171,86 @@ namespace App1
                         break;
 
                     case DisplayFrameType.Depth:
-                        using (DepthFrame depthFrame = 
+                        using (depthFrame = 
                             multiSourceFrame.DepthFrameReference.AcquireFrame())
                         {
                             showDepthFrame(depthFrame);
+                        }
+                        break;
+
+                    case DisplayFrameType.BodyMask:
+                        // Put it in a try catch to utilise finally() and
+                        // clean up frames
+                        try
+                        {
+                            depthFrame =
+                                multiSourceFrame.DepthFrameReference.AcquireFrame();
+                            bodyIndexFrame =
+                                multiSourceFrame.BodyIndexFrameReference.AcquireFrame();
+                            colorFrame =
+                                multiSourceFrame.ColorFrameReference.AcquireFrame();
+
+                            if (depthFrame == null ||
+                                colorFrame == null ||
+                                bodyIndexFrame == null)
+                            {
+                                return;
+                            }
+
+                            // Access the depth frame data directly via
+                            // LockImageBuffer to avoid making a copy
+                            depthFrameDataBuffer = depthFrame.LockImageBuffer();
+                            coordinateMapper.MapColorFrameToDepthSpaceUsingIBuffer(
+                                depthFrameDataBuffer,
+                                colorMappedToDepthPoints);
+
+                            // Process color
+                            colorFrame.CopyConvertedFrameDataToBuffer(
+                                bitmap.PixelBuffer, 
+                                ColorImageFormat.Bgra);
+
+                            // Access the body index frame data directly via
+                            // LockImageBuffer to avoid making a copy
+                            bodyIndexFrameDataBuffer = bodyIndexFrame.LockImageBuffer();
+                            showMappedBodyFrame(depthFrame.FrameDescription.Width,
+                                depthFrame.FrameDescription.Height,
+                                bodyIndexFrameDataBuffer, 
+                                bodyIndexByteAccess);
+                        }
+                        finally
+                        {
+                            if (depthFrame != null)
+                            {
+                                depthFrame.Dispose();
+                            }
+
+                            if (colorFrame != null)
+                            {
+                                colorFrame.Dispose();
+                            }
+
+                            if (bodyIndexFrame != null)
+                            {
+                                bodyIndexFrame.Dispose();
+                            }
+
+                            if (depthFrameDataBuffer != null)
+                            {
+                                System.Runtime.InteropServices.Marshal.
+                                    ReleaseComObject(depthFrameDataBuffer);
+                            }
+
+                            if (bodyIndexFrameDataBuffer != null)
+                            {
+                                System.Runtime.InteropServices.Marshal.
+                                    ReleaseComObject(bodyIndexFrameDataBuffer);
+                            }
+
+                            if (bodyIndexByteAccess != null)
+                            {
+                                System.Runtime.InteropServices.Marshal.
+                                    ReleaseComObject(bodyIndexByteAccess);
+                            }
                         }
                         break;
 
@@ -250,6 +356,72 @@ namespace App1
             }
         }
 
+        unsafe private void showMappedBodyFrame(int depthWidth, 
+            int depthHeight, IBuffer bodyIndexFrameDataBuffer, 
+            IBufferByteAccess bodyIndexByteAccess)
+        {
+            bodyIndexByteAccess = (IBufferByteAccess)bodyIndexFrameDataBuffer;
+            byte *bodyIndexBytes = null;
+            bodyIndexByteAccess.Buffer(out bodyIndexBytes);
+
+            fixed (DepthSpacePoint *colorMappedToDepthPointsPointer = 
+                colorMappedToDepthPoints)
+            {
+                IBufferByteAccess bitmapBackBufferByteAccess =
+                    (IBufferByteAccess)bitmap.PixelBuffer;
+                byte* bitmapBackBufferBytes = null;
+                bitmapBackBufferByteAccess.Buffer(out bitmapBackBufferBytes);
+
+                // Treat color data as 4 bytes pixels
+                uint* bitmapPixelsPointer = (uint*)bitmapBackBufferBytes;
+
+                // Loop over each row and column of color image
+                // Zero out any pixels that don't correspond to a body index
+                int colorMappedLength = colorMappedToDepthPoints.Length;
+
+                for (int colorIndex = 0; colorIndex < colorMappedLength; ++colorIndex)
+                {
+                    float colorMappedToDepthX =
+                        colorMappedToDepthPointsPointer[colorIndex].X;
+                    float colorMappedToDepthY =
+                        colorMappedToDepthPointsPointer[colorIndex].Y;
+                    
+                    // The sentinel value is -inf, -inf, 
+                    // meaning that no depth pixel corresponds to this color pixel
+                    if (!float.IsNegativeInfinity(colorMappedToDepthX) && 
+                        !float.IsNegativeInfinity(colorMappedToDepthY))
+                    {
+                        // Make sure depth pixel maps to a valid point in color space
+                        int depthX = (int)(colorMappedToDepthX + 0.5f);
+                        int depthY = (int)(colorMappedToDepthY + 0.5f);
+
+                        // If the point is not valid, there is no body index
+                        // there
+                        if ((depthX >= 0) && (depthX < depthWidth) && 
+                            (depthY >= 0) && (depthY < depthHeight))
+                        {
+                            int depthIndex = (depthY * depthWidth) + depthX;
+                            //Debug.WriteLine("show");
+
+                            if (bodyIndexBytes[depthIndex] != 0xff)
+                            {
+                                // This bodyIndexByte is gook and is a body
+                                // loop again
+                                continue;
+                            }
+                        }
+                    }
+
+                    // This pixel does not correspond to a body, 
+                    // make it black and transparent
+                    bitmapPixelsPointer[colorIndex] = 0;
+                }
+            }
+
+            bitmap.Invalidate();
+            image.Source = bitmap;
+        }
+
         private void convertDepthDataToPixels(ushort minDepth, ushort maxDepth)
         {
             int colorPixelIndex = 0;
@@ -296,6 +468,9 @@ namespace App1
         {
             currentDFT = newDFT;
 
+            // Frames used by more than one type are declared outside the switch
+            FrameDescription colorFD;
+
             switch (currentDFT)
             {
                 case DisplayFrameType.Infrared:
@@ -309,8 +484,7 @@ namespace App1
                     break;
 
                 case DisplayFrameType.Color:
-                    FrameDescription colorFD =
-                        sensor.ColorFrameSource.FrameDescription;
+                    colorFD = sensor.ColorFrameSource.FrameDescription;
                     CurrentFD = colorFD;
 
                     // Create the bitmap to display
@@ -324,6 +498,17 @@ namespace App1
                     depthData = new ushort[depthFD.Width * depthFD.Height];
                     depthPixels = new byte[depthFD.Width * depthFD.Height * BYTESPERPIXEL];
                     bitmap = new WriteableBitmap(depthFD.Width, depthFD.Height);
+                    break;
+
+                case DisplayFrameType.BodyMask:
+                    colorFD = sensor.ColorFrameSource.FrameDescription;
+                    CurrentFD = colorFD;
+
+                    // Allocate space to put the pixels being received and converted
+                    colorMappedToDepthPoints = 
+                        new DepthSpacePoint[colorFD.Width * colorFD.Height];
+                    bitmap = new WriteableBitmap(
+                        colorFD.Width, colorFD.Height);
                     break;
 
                 default:
@@ -350,6 +535,18 @@ namespace App1
         private void DepthButton_Click(object sender, RoutedEventArgs e)
         {
             setupCurrentDisplay(DisplayFrameType.Depth);
+        }
+
+        private void BodyMask_Click(object sender, RoutedEventArgs e)
+        {
+            setupCurrentDisplay(DisplayFrameType.BodyMask);
+        }
+
+        [Guid("905a0fef-bc53-11df-8c49-001e4fc686da"),
+                 InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        interface IBufferByteAccess
+        {
+            unsafe void Buffer(out byte* pByte);
         }
     }
 }
