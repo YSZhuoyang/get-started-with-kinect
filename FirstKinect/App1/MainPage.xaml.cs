@@ -18,7 +18,6 @@ using System.ComponentModel;
 using Windows.Storage.Streams;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-using Kinect2Sample;
 
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -31,7 +30,8 @@ namespace App1
         Color,
         Depth,
         BodyMask,
-        BodyJoints
+        BodyJoints,
+        BackgroundRemoved
     }
 
     /// <summary>
@@ -56,6 +56,8 @@ namespace App1
 
         private DisplayFrameType currentDFT;
         private string statusText;
+
+        private ushort depthMax = 8000;
 
         // Infrared data
         private ushort[] irData;
@@ -90,6 +92,28 @@ namespace App1
             }
         }
 
+        public DisplayFrameType CurrentDFT
+        {
+            get
+            {
+                return currentDFT;
+            }
+            set
+            {
+                if (currentDFT != value)
+                {
+                    currentDFT = value;
+
+                    if (PropertyChanged != null)
+                    {
+                        PropertyChanged(this,
+                            new PropertyChangedEventArgs(
+                            "CurrentDFT"));
+                    }
+                }
+            }
+        }
+
         public FrameDescription CurrentFD
         {
             get
@@ -106,6 +130,27 @@ namespace App1
                     {
                         this.PropertyChanged(this, 
                             new PropertyChangedEventArgs("CurrentFD"));
+                    }
+                }
+            }
+        }
+
+        public ushort DepthMax
+        {
+            get
+            {
+                return depthMax;
+            }
+            set
+            {
+                if (depthMax != value)
+                {
+                    depthMax = value;
+
+                    if (PropertyChanged != null)
+                    {
+                        PropertyChanged(this,
+                        new PropertyChangedEventArgs("DepthMax"));
                     }
                 }
             }

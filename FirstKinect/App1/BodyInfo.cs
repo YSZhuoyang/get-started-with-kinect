@@ -9,7 +9,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Shapes;
 using WindowsPreview.Kinect;
 
-namespace Kinect2Sample
+namespace App1
 {
     /// <summary>
     /// BodyInfo class that contains joint ellipses, handstate ellipses, lines for bones between two joints.
