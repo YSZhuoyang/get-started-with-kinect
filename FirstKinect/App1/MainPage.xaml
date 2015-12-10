@@ -50,6 +50,10 @@
                 <TextBlock Text = "{Binding CurrentFD.Height}"/>
             </StackPanel>
             <Image Name = "image" Grid.Row = "1" Stretch = "Uniform"/>
+            <Viewbox Grid.Row="1" HorizontalAlignment="Center">
+                <Grid x:Name="BodyJointsGrid" Background="Transparent" Width="512"  
+                Height="414"/>
+            </Viewbox>
             <ScrollViewer Grid.Row="2" 
             ScrollViewer.HorizontalScrollBarVisibility="Auto" 
             ScrollViewer.VerticalScrollBarVisibility="Auto">
@@ -66,6 +70,10 @@
                     <Button Style="{StaticResource 
                         FrameSelectorButtonStyle}" Click="BodyMask_Click">
                         <TextBlock Text="Body Mask" TextWrapping="Wrap"/>
+                    </Button>
+                    <Button Style="{StaticResource FrameSelectorButtonStyle}"
+                            Click="BodyJointsButton_Click">
+                        <TextBlock Text="Body Joints" TextWrapping="Wrap"/>
                     </Button>
                 </StackPanel>
             </ScrollViewer>

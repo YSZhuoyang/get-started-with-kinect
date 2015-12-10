@@ -18,6 +18,7 @@ using System.ComponentModel;
 using Windows.Storage.Streams;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Kinect2Sample;
 
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -29,7 +30,8 @@ namespace App1
         Infrared,
         Color,
         Depth,
-        BodyMask
+        BodyMask,
+        BodyJoints
     }
 
     /// <summary>
@@ -48,6 +50,9 @@ namespace App1
         // Work as a helper to address the problem that 
         // resolutions of color feeds and depth feeds are different
         private CoordinateMapper coordinateMapper;
+
+        private BodiesManager bodiesManager;
+        private Canvas drawingCnavas;
 
         private DisplayFrameType currentDFT;
         private string statusText;
@@ -122,8 +127,9 @@ namespace App1
             reader = sensor.OpenMultiSourceFrameReader(
                 FrameSourceTypes.Infrared | 
                 FrameSourceTypes.Color | 
-                FrameSourceTypes.Depth |
-                FrameSourceTypes.BodyIndex);
+                FrameSourceTypes.Depth | 
+                FrameSourceTypes.BodyIndex | 
+                FrameSourceTypes.Body);
             reader.MultiSourceFrameArrived += multiSourceFrameArrived;
             
             // Set Is available changed event notifier
@@ -145,6 +151,7 @@ namespace App1
                 ColorFrame colorFrame = null;
                 InfraredFrame infraredFrame = null;
                 BodyIndexFrame bodyIndexFrame = null;
+                BodyFrame bodyFrame = null;
 
                 IBuffer depthFrameDataBuffer = null;
                 IBuffer bodyIndexFrameDataBuffer = null;
@@ -254,9 +261,34 @@ namespace App1
                         }
                         break;
 
+                    case DisplayFrameType.BodyJoints:
+                        using (bodyFrame =
+                            multiSourceFrame.BodyFrameReference.AcquireFrame())
+                        {
+                            showBodyJoints(bodyFrame);
+                        }
+                        break;
+
                     default:
                         break;
                 }
+            }
+        }
+
+        private void showBodyJoints(BodyFrame bodyFrame)
+        {
+            Body[] bodies = new Body[sensor.BodyFrameSource.BodyCount];
+            bool dataReceived = false;
+
+            if (bodyFrame != null)
+            {
+                bodyFrame.GetAndRefreshBodyData(bodies);
+                dataReceived = true;
+            }
+
+            if (dataReceived)
+            {
+                bodiesManager.UpdateBodiesAndEdges(bodies);
             }
         }
 
@@ -471,6 +503,16 @@ namespace App1
             // Frames used by more than one type are declared outside the switch
             FrameDescription colorFD;
 
+            if (BodyJointsGrid != null)
+            {
+                BodyJointsGrid.Visibility = Visibility.Collapsed;
+            }
+
+            if (image != null)
+            {
+                image.Source = null;
+            }
+
             switch (currentDFT)
             {
                 case DisplayFrameType.Infrared:
@@ -511,6 +553,26 @@ namespace App1
                         colorFD.Width, colorFD.Height);
                     break;
 
+                case DisplayFrameType.BodyJoints:
+                    drawingCnavas = new Canvas();
+
+                    drawingCnavas.Clip = new RectangleGeometry();
+                    drawingCnavas.Clip.Rect = new Rect(0.0, 0.0, 
+                        BodyJointsGrid.Width,
+                        BodyJointsGrid.Height);
+                    drawingCnavas.Width = BodyJointsGrid.Width;
+                    drawingCnavas.Height = BodyJointsGrid.Height;
+
+                    // Reset body joints grid
+                    BodyJointsGrid.Visibility = Visibility.Visible;
+                    BodyJointsGrid.Children.Clear();
+
+                    // Add canvas to DisplayGrid
+                    BodyJointsGrid.Children.Add(drawingCnavas);
+                    bodiesManager = new BodiesManager(coordinateMapper,
+                        drawingCnavas, sensor.BodyFrameSource.BodyCount);
+                    break;
+
                 default:
                     break;
             }
@@ -540,6 +602,11 @@ namespace App1
         private void BodyMask_Click(object sender, RoutedEventArgs e)
         {
             setupCurrentDisplay(DisplayFrameType.BodyMask);
+        }
+
+        private void BodyJointsButton_Click(object sender, RoutedEventArgs e)
+        {
+            setupCurrentDisplay(DisplayFrameType.BodyJoints);
         }
 
         [Guid("905a0fef-bc53-11df-8c49-001e4fc686da"),
