@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectUnity.CSharp.Plugins", "KinectUnity.CSharp.Plugins.csproj", "{F9CA207C-4F42-3E9D-C81D-7E6D61DF404C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectUnity.CSharp", "KinectUnity.CSharp.csproj", "{B48D2765-C374-0086-FC8C-0A96F0F0ED5C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectUnity.CSharp.Editor.Plugins", "KinectUnity.CSharp.Editor.Plugins.csproj", "{92BE41E4-ECF0-8964-6CE5-4AD05B718E3A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9CA207C-4F42-3E9D-C81D-7E6D61DF404C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9CA207C-4F42-3E9D-C81D-7E6D61DF404C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9CA207C-4F42-3E9D-C81D-7E6D61DF404C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9CA207C-4F42-3E9D-C81D-7E6D61DF404C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B48D2765-C374-0086-FC8C-0A96F0F0ED5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B48D2765-C374-0086-FC8C-0A96F0F0ED5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B48D2765-C374-0086-FC8C-0A96F0F0ED5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B48D2765-C374-0086-FC8C-0A96F0F0ED5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92BE41E4-ECF0-8964-6CE5-4AD05B718E3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92BE41E4-ECF0-8964-6CE5-4AD05B718E3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92BE41E4-ECF0-8964-6CE5-4AD05B718E3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92BE41E4-ECF0-8964-6CE5-4AD05B718E3A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
