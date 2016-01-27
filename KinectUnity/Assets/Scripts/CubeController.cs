@@ -8,7 +8,6 @@ public class CubeController : MonoBehaviour
     private BodyFrameReader reader;
     private Body[] bodyData = null;
     
-	// Use this for initialization
 	void Start()
     {
         sensor = KinectSensor.GetDefault();
@@ -75,8 +74,6 @@ public class CubeController : MonoBehaviour
 
                 if (idx > -1)
                 {
-                    //print("idx: " + idx);
-
                     /*if (bodyData[idx].HandRightState != HandState.Closed)
                     {
                         float posRightHandX = (float)(bodyData[idx].Joints[JointType.HandRight].Position.X);
