@@ -129,7 +129,7 @@ public class BodyView : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        int state = 0;
+        //int state = 0;
 
         if (bodyManager == null)
         {

@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\CubeController.cs" />
+    <Compile Include="Assets\Scripts\KinectBody\BodyController.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyManager.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyView.cs" />
   </ItemGroup>
