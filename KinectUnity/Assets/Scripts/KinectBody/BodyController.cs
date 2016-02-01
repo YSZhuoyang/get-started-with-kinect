@@ -36,6 +36,8 @@ public class BodyController : MonoBehaviour
 
     private Quaternion initialHeadOrientation;
     private Quaternion initialNeckOrientation;
+    private Quaternion initialShoulderRightOrientation;
+    private Quaternion initialElbowRightOrientation;
 
     private BodyManager bodyManagerScript;
     private Dictionary<ulong, GameObject> bodyMap = new Dictionary<ulong, GameObject>();
@@ -75,6 +77,8 @@ public class BodyController : MonoBehaviour
     {
         initialHeadOrientation = jointHead.transform.rotation;
         initialNeckOrientation = jointNeck.transform.rotation;
+        initialShoulderRightOrientation = jointArmShoulderLowerRight.transform.rotation;
+        initialElbowRightOrientation = jointArmElbowRight.transform.rotation;
     }
 
     private GameObject CreateBodyObj(ulong id)
@@ -113,7 +117,7 @@ public class BodyController : MonoBehaviour
 
             //Transform jointObj = bodyObj.transform.FindChild(jointType.ToString());
             //jointObj.localPosition = GetVector3FromJoint(sourceJoint);
-            
+
             // Testing body control
             switch (jointType)
             {
@@ -124,29 +128,18 @@ public class BodyController : MonoBehaviour
 
                     //jointHead.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
-                case JointType.Neck:
-                    print("X: " + jointNeck.transform.eulerAngles.x);
-                    print("Y: " + jointNeck.transform.eulerAngles.y);
-                    print("Z: " + jointNeck.transform.eulerAngles.z);
-
-                    //jointNeck.transform.rotation = Quaternion.FromToRotation(new Vector3(0, 0, 1), new Vector3(1, 0, 0));// Quaternion.identity;// initialNeckOrientation;
-                    //jointNeck.transform.Rotate(new Vector3(0, 0, -90));// GetRotationVector(body.JointOrientations[JointType.Neck])
-
-                    //jointNeck.transform.parent.inverse
+			case JointType.Neck:
+                    //print("X: " + jointNeck.transform.eulerAngles.x);
+                    //print("Y: " + jointNeck.transform.eulerAngles.y);
+                    //print("Z: " + jointNeck.transform.eulerAngles.z);
                     
-                    jointNeck.transform.rotation = Quaternion.FromToRotation(
-                        new Vector3(-1, 0, 0),
-                        GetRotationVector(body.JointOrientations[JointType.Neck]));
+					/*jointNeck.transform.rotation = Quaternion.FromToRotation (
+						new Vector3 (0, 1, 0),
+						GetRotationVector (body.JointOrientations [JointType.Neck]));
+					jointNeck.transform.Rotate (initialNeckOrientation.eulerAngles);
+					*/
+				jointNeck.transform.rotation = jointNeck.parent.transform.rotation * body.JointOrientations [JointType.Neck].Orientation;
                     
-
-
-
-
-
-                    //jointNeck.transform.localRotation = new Quaternion(0, 0, 0, 0);
-                    //jointNeck.transform.rotation =
-                    //    GetRotationVector(body.JointOrientations[JointType.Neck]);
-                    //jointNeck.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
                 /*case JointType.SpineBase:
                     jointSpineLower.transform.position = GetVector3FromJoint(sourceJoint);
@@ -160,17 +153,35 @@ public class BodyController : MonoBehaviour
                     break;
                 case JointType.ShoulderLeft:
                     jointArmShoulderUpperLeft.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;
+                    break;*/
                 case JointType.ShoulderRight:
-                    jointArmShoulderUpperRight.transform.position = GetVector3FromJoint(sourceJoint);
+                    print("s X: " + GetRotationVector(body.JointOrientations[JointType.ShoulderRight]).x);
+                    print("s Y: " + GetRotationVector(body.JointOrientations[JointType.ShoulderRight]).y);
+                    print("s Z: " + GetRotationVector(body.JointOrientations[JointType.ShoulderRight]).z);
+
+                    jointArmShoulderLowerRight.transform.rotation = Quaternion.FromToRotation(
+                        new Vector3(-1f, 1f, 0),
+                        GetRotationVector(body.JointOrientations[JointType.ShoulderRight]));
+                    jointArmShoulderLowerRight.transform.Rotate(initialShoulderRightOrientation.eulerAngles);
+
+                    //jointArmShoulderUpperRight.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
-                case JointType.ElbowLeft:
+                /*case JointType.ElbowLeft:
                     jointArmElbowLeft.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;
+                    break;*/
                 case JointType.ElbowRight:
-                    jointArmElbowRight.transform.position = GetVector3FromJoint(sourceJoint);
+                    //print("e X: " + GetRotationVector(body.JointOrientations[JointType.ElbowRight]).x);
+                    //print("e Y: " + GetRotationVector(body.JointOrientations[JointType.ElbowRight]).y);
+                    //print("e Z: " + GetRotationVector(body.JointOrientations[JointType.ElbowRight]).z);
+
+                    jointArmElbowRight.transform.rotation = Quaternion.FromToRotation(
+                        new Vector3(0f, 0f, 7f),
+                        GetRotationVector(body.JointOrientations[JointType.ElbowRight]));
+                    jointArmElbowRight.transform.Rotate(initialElbowRightOrientation.eulerAngles);
+                    
+                    //jointArmElbowRight.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
-                case JointType.WristLeft:
+                /*case JointType.WristLeft:
                     jointArmWristLeft.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
                 case JointType.WristRight:
@@ -224,10 +235,12 @@ public class BodyController : MonoBehaviour
 
     private static Vector3 GetRotationVector(Windows.Kinect.JointOrientation orientation)
     {
+		//print ("Ori w: " + orientation.Orientation.W);
+
         return new Vector3(
-            orientation.Orientation.X,
-            orientation.Orientation.Y,
-            orientation.Orientation.Z);
+			-orientation.Orientation.X / orientation.Orientation.W,
+			orientation.Orientation.Y / orientation.Orientation.W,
+			orientation.Orientation.Z / orientation.Orientation.W);
         //orientation.Orientation.W);
     }
 
