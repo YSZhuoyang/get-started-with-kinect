@@ -128,7 +128,7 @@ public class BodyController : MonoBehaviour
 
                     //jointHead.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
-			case JointType.Neck:
+			    case JointType.Neck:
                     //print("X: " + jointNeck.transform.eulerAngles.x);
                     //print("Y: " + jointNeck.transform.eulerAngles.y);
                     //print("Z: " + jointNeck.transform.eulerAngles.z);
@@ -138,8 +138,19 @@ public class BodyController : MonoBehaviour
 						GetRotationVector (body.JointOrientations [JointType.Neck]));
 					jointNeck.transform.Rotate (initialNeckOrientation.eulerAngles);
 					*/
-				jointNeck.transform.rotation = jointNeck.parent.transform.rotation * body.JointOrientations [JointType.Neck].Orientation;
-                    
+                    Quaternion localRotation = new Quaternion(
+                        body.JointOrientations[JointType.Neck].Orientation.X,
+                        body.JointOrientations[JointType.Neck].Orientation.Y,
+                        body.JointOrientations[JointType.Neck].Orientation.Z,
+                        body.JointOrientations[JointType.Neck].Orientation.W);
+
+                    // Option 1
+                    jointNeck.transform.rotation = 
+                        jointNeck.transform.parent.rotation * ConvertCoordSysFromKinectToUnity(localRotation);
+
+                    // Option 2
+                    jointNeck.transform.localRotation = ConvertCoordSysFromKinectToUnity(localRotation);
+
                     break;
                 /*case JointType.SpineBase:
                     jointSpineLower.transform.position = GetVector3FromJoint(sourceJoint);
@@ -231,6 +242,21 @@ public class BodyController : MonoBehaviour
                 lineRenderer.enabled = false;
             }*/
         }
+    }
+
+    private static Quaternion ConvertCoordSysFromKinectToUnity(Quaternion rotationIn)
+    {
+        // Option 1
+        Quaternion rotationOut = new Quaternion();
+        rotationOut.eulerAngles = new Vector3(
+            -rotationIn.eulerAngles.x, 
+            rotationIn.eulerAngles.y, 
+            rotationIn.eulerAngles.z);
+
+        // Option 2
+        //Quaternion rotationOut = new Quaternion(-rotationIn.x, rotationIn.y, rotationIn.z, -rotationIn.w);
+
+        return rotationOut;
     }
 
     private static Vector3 GetRotationVector(Windows.Kinect.JointOrientation orientation)
