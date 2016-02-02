@@ -31,17 +31,47 @@ public class BodyController : MonoBehaviour
     public GameObject jointArmElbowRight;
     public GameObject jointArmWristLeft;
     public GameObject jointArmWristRight;
-    //public GameObject jointArmElbowLeft;
-    //public GameObject jointArmElbowRight;
 
-    private Quaternion initialHeadOrientation;
-    private Quaternion initialNeckOrientation;
-    private Quaternion initialShoulderRightOrientation;
-    private Quaternion initialElbowRightOrientation;
-
+    public GameObject root;
+    
     private BodyManager bodyManagerScript;
     private Dictionary<ulong, GameObject> bodyMap = new Dictionary<ulong, GameObject>();
-    private Dictionary<JointType, JointType> boneMap = new Dictionary<JointType, JointType>()
+
+    // <child, parent>
+    private Dictionary<JointType, JointType> jointHierarchy = new Dictionary<JointType, JointType>()
+    {
+        { JointType.HipRight ,JointType.SpineBase },
+        { JointType.KneeRight, JointType.HipRight },
+        { JointType.AnkleRight, JointType.KneeRight },
+        { JointType.FootRight, JointType.AnkleRight },
+
+        { JointType.HipLeft, JointType.SpineBase },
+        { JointType.KneeLeft, JointType.HipLeft },
+        { JointType.AnkleLeft, JointType.KneeLeft },
+        { JointType.FootLeft, JointType.AnkleLeft },
+
+        { JointType.SpineMid, JointType.SpineBase },
+        { JointType.SpineShoulder, JointType.SpineMid },
+
+        { JointType.Neck, JointType.SpineShoulder },
+        { JointType.Head, JointType.Neck },
+
+        { JointType.ShoulderRight, JointType.SpineShoulder },
+        { JointType.ElbowRight, JointType.ShoulderRight },
+        { JointType.WristRight, JointType.ElbowRight },
+        { JointType.HandRight, JointType.WristRight },
+        { JointType.HandTipRight, JointType.HandRight },
+        { JointType.ThumbRight, JointType.WristRight },
+
+        { JointType.ShoulderLeft, JointType.SpineShoulder },
+        { JointType.ElbowLeft, JointType.ShoulderLeft },
+        { JointType.WristLeft, JointType.ElbowLeft },
+        { JointType.HandLeft, JointType.WristLeft },
+        { JointType.HandTipLeft, JointType.HandLeft },
+        { JointType.ThumbLeft, JointType.WristLeft },
+    };
+
+    /*private Dictionary<JointType, JointType> jointHierarchy = new Dictionary<JointType, JointType>()
     {
         { JointType.FootLeft, JointType.AnkleLeft },
         { JointType.AnkleLeft, JointType.KneeLeft },
@@ -71,14 +101,11 @@ public class BodyController : MonoBehaviour
         { JointType.SpineMid, JointType.SpineShoulder },
         { JointType.SpineShoulder, JointType.Neck },
         { JointType.Neck, JointType.Head }
-    };
+    };*/
 
     void Start()
     {
-        initialHeadOrientation = jointHead.transform.rotation;
-        initialNeckOrientation = jointNeck.transform.rotation;
-        initialShoulderRightOrientation = jointArmShoulderLowerRight.transform.rotation;
-        initialElbowRightOrientation = jointArmElbowRight.transform.rotation;
+
     }
 
     private GameObject CreateBodyObj(ulong id)
@@ -104,19 +131,52 @@ public class BodyController : MonoBehaviour
 
     private void RefreshBodyObj(Body body, GameObject bodyObj)
     {
+        // Breath first Traversal
         for (JointType jointType = JointType.SpineBase; jointType <= JointType.ThumbRight; jointType++)
         {
-            Windows.Kinect.Joint sourceJoint = body.Joints[jointType];
+            //Windows.Kinect.Joint sourceJoint = body.Joints[jointType];
             // What does that Joint? mean?
-            Windows.Kinect.Joint? targetJoint = null;
+            //Windows.Kinect.Joint? targetJoint = null;
+            
+            Quaternion localRotation = new Quaternion();
+            Quaternion parentRotation = new Quaternion();
 
-            if (boneMap.ContainsKey(jointType))
+            // Root joint
+            if (jointType == JointType.SpineBase)
             {
-                targetJoint = body.Joints[boneMap[jointType]];
-            }
+                JointType root = jointType;
 
-            //Transform jointObj = bodyObj.transform.FindChild(jointType.ToString());
-            //jointObj.localPosition = GetVector3FromJoint(sourceJoint);
+                localRotation = new Quaternion(
+                    body.JointOrientations[root].Orientation.X,
+                    body.JointOrientations[root].Orientation.Y,
+                    body.JointOrientations[root].Orientation.Z,
+                    body.JointOrientations[root].Orientation.W);
+
+                parentRotation = Quaternion.identity;
+            }
+            // Has parent
+            else
+            {
+                //targetJoint = body.Joints[jointHierarchy[jointType]];
+                
+                //Transform jointObj = bodyObj.transform.FindChild(jointType.ToString());
+                //jointObj.localPosition = GetVector3FromJoint(sourceJoint);
+                
+                JointType parent = jointHierarchy[jointType];
+                JointType child = jointType;
+
+                localRotation = new Quaternion(
+                    body.JointOrientations[child].Orientation.X,
+                    body.JointOrientations[child].Orientation.Y,
+                    body.JointOrientations[child].Orientation.Z,
+                    body.JointOrientations[child].Orientation.W);
+
+                parentRotation = new Quaternion(
+                    body.JointOrientations[parent].Orientation.X,
+                    body.JointOrientations[parent].Orientation.Y,
+                    body.JointOrientations[parent].Orientation.Z,
+                    body.JointOrientations[parent].Orientation.W);
+            }
 
             // Testing body control
             switch (jointType)
@@ -128,28 +188,16 @@ public class BodyController : MonoBehaviour
 
                     //jointHead.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
-			    case JointType.Neck:
-                    //print("X: " + jointNeck.transform.eulerAngles.x);
-                    //print("Y: " + jointNeck.transform.eulerAngles.y);
-                    //print("Z: " + jointNeck.transform.eulerAngles.z);
-                    
-					/*jointNeck.transform.rotation = Quaternion.FromToRotation (
-						new Vector3 (0, 1, 0),
-						GetRotationVector (body.JointOrientations [JointType.Neck]));
-					jointNeck.transform.Rotate (initialNeckOrientation.eulerAngles);
-					*/
-                    Quaternion localRotation = new Quaternion(
-                        body.JointOrientations[JointType.Neck].Orientation.X,
-                        body.JointOrientations[JointType.Neck].Orientation.Y,
-                        body.JointOrientations[JointType.Neck].Orientation.Z,
-                        body.JointOrientations[JointType.Neck].Orientation.W);
+                case JointType.Neck:
 
                     // Option 1
-                    jointNeck.transform.rotation = 
-                        jointNeck.transform.parent.rotation * ConvertCoordSysFromKinectToUnity(localRotation);
+                    jointNeck.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation) *
+                        jointNeck.transform.parent.rotation;
 
                     // Option 2
-                    jointNeck.transform.localRotation = ConvertCoordSysFromKinectToUnity(localRotation);
+                    //jointNeck.transform.localRotation = ConvertCoordSysFromKinectToUnity(localRotation);
 
                     break;
                 /*case JointType.SpineBase:
@@ -166,31 +214,33 @@ public class BodyController : MonoBehaviour
                     jointArmShoulderUpperLeft.transform.position = GetVector3FromJoint(sourceJoint);
                     break;*/
                 case JointType.ShoulderRight:
-                    print("s X: " + GetRotationVector(body.JointOrientations[JointType.ShoulderRight]).x);
-                    print("s Y: " + GetRotationVector(body.JointOrientations[JointType.ShoulderRight]).y);
-                    print("s Z: " + GetRotationVector(body.JointOrientations[JointType.ShoulderRight]).z);
 
-                    jointArmShoulderLowerRight.transform.rotation = Quaternion.FromToRotation(
-                        new Vector3(-1f, 1f, 0),
-                        GetRotationVector(body.JointOrientations[JointType.ShoulderRight]));
-                    jointArmShoulderLowerRight.transform.Rotate(initialShoulderRightOrientation.eulerAngles);
+                    jointArmShoulderLowerRight.transform.rotation =
+                        //initialShoulderRightRotation *
+                        //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation);// *
+                    //jointArmShoulderLowerRight.transform.parent.rotation;// *
+                    //jointArmShoulderLowerRight.transform.parent.rotation;
 
-                    //jointArmShoulderUpperRight.transform.position = GetVector3FromJoint(sourceJoint);
+                    //jointArmShoulderLowerRight.transform.rotation =
+                    //    ConvertCoordSysFromKinectToUnity(localRotation) * jointArmShoulderLowerRight.transform.parent.rotation;
+
                     break;
                 /*case JointType.ElbowLeft:
                     jointArmElbowLeft.transform.position = GetVector3FromJoint(sourceJoint);
                     break;*/
                 case JointType.ElbowRight:
-                    //print("e X: " + GetRotationVector(body.JointOrientations[JointType.ElbowRight]).x);
-                    //print("e Y: " + GetRotationVector(body.JointOrientations[JointType.ElbowRight]).y);
-                    //print("e Z: " + GetRotationVector(body.JointOrientations[JointType.ElbowRight]).z);
 
-                    jointArmElbowRight.transform.rotation = Quaternion.FromToRotation(
-                        new Vector3(0f, 0f, 7f),
-                        GetRotationVector(body.JointOrientations[JointType.ElbowRight]));
-                    jointArmElbowRight.transform.Rotate(initialElbowRightOrientation.eulerAngles);
-                    
-                    //jointArmElbowRight.transform.position = GetVector3FromJoint(sourceJoint);
+                    //jointArmElbowRight.transform.rotation =
+                    //initialShoulderRightRotation *
+                    //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                    //ConvertCoordSysFromKinectToUnity(parentRotation);
+
+                    /*jointArmElbowRight.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation);// *
+                        //jointArmElbowRight.transform.parent.rotation;*/
+
                     break;
                 /*case JointType.WristLeft:
                     jointArmWristLeft.transform.position = GetVector3FromJoint(sourceJoint);
@@ -225,72 +275,22 @@ public class BodyController : MonoBehaviour
                     break;
                     */
             }
-
-            /*
-            LineRenderer lineRenderer = jointObj.GetComponent<LineRenderer>();
-
-            if (targetJoint.HasValue)
-            {
-                lineRenderer.SetPosition(0, jointObj.localPosition);
-                lineRenderer.SetPosition(1, GetVector3FromJoint(targetJoint.Value));
-                lineRenderer.SetColors(
-                    GetColorForState(sourceJoint.TrackingState),
-                    GetColorForState(targetJoint.Value.TrackingState));
-            }
-            else
-            {
-                lineRenderer.enabled = false;
-            }*/
         }
     }
-
+    
     private static Quaternion ConvertCoordSysFromKinectToUnity(Quaternion rotationIn)
     {
         // Option 1
         Quaternion rotationOut = new Quaternion();
         rotationOut.eulerAngles = new Vector3(
-            -rotationIn.eulerAngles.x, 
-            rotationIn.eulerAngles.y, 
-            rotationIn.eulerAngles.z);
-
+            rotationIn.eulerAngles.z, // z
+            rotationIn.eulerAngles.x, // x
+            rotationIn.eulerAngles.y); // y
+        
         // Option 2
-        //Quaternion rotationOut = new Quaternion(-rotationIn.x, rotationIn.y, rotationIn.z, -rotationIn.w);
+        //Quaternion rotationOut = new Quaternion(rotationIn.x, rotationIn.y, rotationIn.z, rotationIn.w);
 
         return rotationOut;
-    }
-
-    private static Vector3 GetRotationVector(Windows.Kinect.JointOrientation orientation)
-    {
-		//print ("Ori w: " + orientation.Orientation.W);
-
-        return new Vector3(
-			-orientation.Orientation.X / orientation.Orientation.W,
-			orientation.Orientation.Y / orientation.Orientation.W,
-			orientation.Orientation.Z / orientation.Orientation.W);
-        //orientation.Orientation.W);
-    }
-
-    private static Color GetColorForState(TrackingState state)
-    {
-        switch (state)
-        {
-            case TrackingState.Tracked:
-                return Color.green;
-
-            case TrackingState.Inferred:
-                return Color.red;
-
-            default:
-                return Color.black;
-        }
-    }
-
-    private static Vector3 GetVector3FromJoint(Windows.Kinect.Joint joint)
-    {
-        return new Vector3(
-            joint.Position.X * 4,
-            joint.Position.Y * 4,
-            joint.Position.Z * 4);
     }
     
     // Update is called once per frame
