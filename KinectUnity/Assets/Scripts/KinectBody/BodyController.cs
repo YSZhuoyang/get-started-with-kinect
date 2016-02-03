@@ -6,15 +6,13 @@ using Windows.Kinect;
 
 public class BodyController : MonoBehaviour
 {
-    public Material boneMaterial;
     public GameObject bodyManager;
 
     public GameObject jointHead;
     public GameObject jointNeck;
     public GameObject jointSpineUpper;
     public GameObject jointSpineMiddle;
-    public GameObject jointSpineLower;
-    public GameObject jointPelvis;
+    public GameObject jointSpineBase;
     public GameObject jointLegThighLeft;
     public GameObject jointLegThighRight;
     public GameObject jointLegKneeLeft;
@@ -105,7 +103,10 @@ public class BodyController : MonoBehaviour
 
     void Start()
     {
-
+        root.transform.position = new Vector3(
+            -root.transform.position.x,
+            root.transform.position.y,
+            root.transform.position.z);
     }
 
     private GameObject CreateBodyObj(ulong id)
@@ -118,7 +119,6 @@ public class BodyController : MonoBehaviour
 
             LineRenderer lineRender = jointObj.AddComponent<LineRenderer>();
             lineRender.SetVertexCount(2);
-            lineRender.material = boneMaterial;
             lineRender.SetWidth(0.05f, 0.05f);
 
             jointObj.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
@@ -151,8 +151,6 @@ public class BodyController : MonoBehaviour
                     body.JointOrientations[root].Orientation.Y,
                     body.JointOrientations[root].Orientation.Z,
                     body.JointOrientations[root].Orientation.W);
-
-                parentRotation = Quaternion.identity;
             }
             // Has parent
             else
@@ -181,56 +179,70 @@ public class BodyController : MonoBehaviour
             // Testing body control
             switch (jointType)
             {
+                case JointType.SpineBase:
+                    jointSpineBase.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    break;
+
+                case JointType.SpineMid:
+                    jointSpineMiddle.transform.rotation =
+                        //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    break;
+
+                case JointType.SpineShoulder:
+                    jointSpineUpper.transform.rotation =
+                        //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    break;
+
+                case JointType.Neck:
+                    jointNeck.transform.rotation =
+                        //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    break;
+
                 case JointType.Head:
+                    jointHead.transform.rotation =
+                        //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    break;
+
                     //jointHead.transform.rotation = initialHeadOrientation;
                     //jointHead.transform.Rotate(GetRotationVector(body.JointOrientations[JointType.Head]));
                     //jointHead.transform.localRotation = new Quaternion(0, 0, 0, 0);
 
                     //jointHead.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;
-                case JointType.Neck:
-
-                    // Option 1
-                    jointNeck.transform.rotation =
-                        ConvertCoordSysFromKinectToUnity(parentRotation) *
-                        ConvertCoordSysFromKinectToUnity(localRotation) *
-                        jointNeck.transform.parent.rotation;
-
-                    // Option 2
-                    //jointNeck.transform.localRotation = ConvertCoordSysFromKinectToUnity(localRotation);
-
-                    break;
-                /*case JointType.SpineBase:
-                    jointSpineLower.transform.position = GetVector3FromJoint(sourceJoint);
-                    jointPelvis.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;
-                case JointType.SpineMid:
-                    jointSpineMiddle.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;
-                case JointType.SpineShoulder:
-                    jointSpineUpper.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;
+                
                 case JointType.ShoulderLeft:
-                    jointArmShoulderUpperLeft.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;*/
-                case JointType.ShoulderRight:
-
-                    jointArmShoulderLowerRight.transform.rotation =
-                        //initialShoulderRightRotation *
+                    
+                    jointArmShoulderUpperLeft.transform.rotation =
                         //ConvertCoordSysFromKinectToUnity(parentRotation) *
-                        ConvertCoordSysFromKinectToUnity(localRotation);// *
-                    //jointArmShoulderLowerRight.transform.parent.rotation;// *
-                    //jointArmShoulderLowerRight.transform.parent.rotation;
-
-                    //jointArmShoulderLowerRight.transform.rotation =
-                    //    ConvertCoordSysFromKinectToUnity(localRotation) * jointArmShoulderLowerRight.transform.parent.rotation;
+                        ConvertCoordSysFromKinectToUnity(localRotation);
 
                     break;
-                /*case JointType.ElbowLeft:
-                    jointArmElbowLeft.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;*/
+                case JointType.ShoulderRight:
+                    
+                    //jointArmShoulderUpperRight.transform.rotation =
+                        //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        //(localRotation);
+
+                    break;
+                case JointType.ElbowLeft:
+
+                    jointArmShoulderLowerLeft.transform.rotation =
+                        //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+
+                    jointArmShoulderLowerLeft.transform.Rotate(new Vector3(0, 180, 0));
+                    break;
+                    //jointArmShoulderLowerLeft.transform.rotation =
+                    //ConvertCoordSysFromKinectToUnity(parentRotation) *
+                    //ConvertCoordSysFromKinectToUnity(localRotation);
+                    break;
                 case JointType.ElbowRight:
 
+                    
                     //jointArmElbowRight.transform.rotation =
                     //initialShoulderRightRotation *
                     //ConvertCoordSysFromKinectToUnity(parentRotation) *
@@ -281,15 +293,18 @@ public class BodyController : MonoBehaviour
     private static Quaternion ConvertCoordSysFromKinectToUnity(Quaternion rotationIn)
     {
         // Option 1
-        Quaternion rotationOut = new Quaternion();
+        /*Quaternion rotationOut = new Quaternion();
         rotationOut.eulerAngles = new Vector3(
-            rotationIn.eulerAngles.z, // z
-            rotationIn.eulerAngles.x, // x
-            rotationIn.eulerAngles.y); // y
+            rotationIn.eulerAngles.x, // z
+            -rotationIn.eulerAngles.y, // x
+            rotationIn.eulerAngles.z); // y
+        */
         
         // Option 2
-        //Quaternion rotationOut = new Quaternion(rotationIn.x, rotationIn.y, rotationIn.z, rotationIn.w);
-
+        Quaternion rotationOut = new Quaternion(rotationIn.x, -rotationIn.y, -rotationIn.z, rotationIn.w);
+        //rotationOut = new Quaternion(rotationOut.x, rotationOut.y, -rotationOut.z, rotationOut.w);
+        //return Quaternion.Inverse(rotationIn);
+        
         return rotationOut;
     }
     
