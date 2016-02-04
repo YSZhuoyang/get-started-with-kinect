@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Windows.Kinect;
 
 
+// For displaying skeleton data
 public class BodyView : MonoBehaviour
 {
     public Material boneMaterial;

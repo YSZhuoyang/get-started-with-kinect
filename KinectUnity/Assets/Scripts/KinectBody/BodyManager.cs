@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Windows.Kinect;
 
-
+// Receiving (body frame) data from kinect
 public class BodyManager : MonoBehaviour
 {
     private KinectSensor sensor;

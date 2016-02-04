@@ -30,13 +30,13 @@ public class BodyController : MonoBehaviour
     public GameObject jointArmElbowRight;
     public GameObject jointArmWristLeft;
     public GameObject jointArmWristRight;
-
-    public GameObject root;
     
     private BodyManager bodyManagerScript;
-    private Dictionary<ulong, GameObject> bodyMap = new Dictionary<ulong, GameObject>();
+    //private Dictionary<ulong, GameObject> bodyMap = new Dictionary<ulong, GameObject>();
 
-    // <child, parent>
+    // <child, parent> Note that the joint data from kinect is different from that 
+    // in the avatars used in Unity (e.g. the orientation data of parent joint from 
+    // kinect maps to the orientation data of child joint of avatars)
     private Dictionary<JointType, JointType> jointHierarchy = new Dictionary<JointType, JointType>()
     {
         { JointType.HipRight ,JointType.SpineBase },
@@ -69,68 +69,20 @@ public class BodyController : MonoBehaviour
         { JointType.HandTipLeft, JointType.HandLeft },
         { JointType.ThumbLeft, JointType.WristLeft },
     };
-
-    /*private Dictionary<JointType, JointType> jointHierarchy = new Dictionary<JointType, JointType>()
-    {
-        { JointType.FootLeft, JointType.AnkleLeft },
-        { JointType.AnkleLeft, JointType.KneeLeft },
-        { JointType.KneeLeft, JointType.HipLeft },
-        { JointType.HipLeft, JointType.SpineBase },
-
-        { JointType.FootRight, JointType.AnkleRight },
-        { JointType.AnkleRight, JointType.KneeRight },
-        { JointType.KneeRight, JointType.HipRight },
-        { JointType.HipRight, JointType.SpineBase },
-
-        { JointType.HandTipLeft, JointType.HandLeft }, // Need this for HandSates
-        { JointType.ThumbLeft, JointType.HandLeft },
-        { JointType.HandLeft, JointType.WristLeft },
-        { JointType.WristLeft, JointType.ElbowLeft },
-        { JointType.ElbowLeft, JointType.ShoulderLeft },
-        { JointType.ShoulderLeft, JointType.SpineShoulder },
-
-        { JointType.HandTipRight, JointType.HandRight }, // Need this for Hand State
-        { JointType.ThumbRight, JointType.HandRight },
-        { JointType.HandRight, JointType.WristRight },
-        { JointType.WristRight, JointType.ElbowRight },
-        { JointType.ElbowRight, JointType.ShoulderRight },
-        { JointType.ShoulderRight, JointType.SpineShoulder },
-
-        { JointType.SpineBase, JointType.SpineMid },
-        { JointType.SpineMid, JointType.SpineShoulder },
-        { JointType.SpineShoulder, JointType.Neck },
-        { JointType.Neck, JointType.Head }
-    };*/
-
+    
     void Start()
     {
-        root.transform.position = new Vector3(
-            -root.transform.position.x,
-            root.transform.position.y,
-            root.transform.position.z);
+
     }
 
-    private GameObject CreateBodyObj(ulong id)
+    // To be used for creating more than one controlled avatars
+    private void CreateBodyObj(ulong id)
     {
-        GameObject body = new GameObject("Body: " + id);
-
-        for (JointType jointType = JointType.SpineBase; jointType <= JointType.ThumbRight; jointType++)
-        {
-            GameObject jointObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-            LineRenderer lineRender = jointObj.AddComponent<LineRenderer>();
-            lineRender.SetVertexCount(2);
-            lineRender.SetWidth(0.05f, 0.05f);
-
-            jointObj.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
-            jointObj.name = jointType.ToString();
-            jointObj.transform.parent = body.transform;
-        }
-
-        return body;
+        
     }
 
-    private void RefreshBodyObj(Body body, GameObject bodyObj)
+    // Update joint data (orientations) of the body
+    private void RefreshBodyObj(Body body)
     {
         // Breath first Traversal
         for (JointType jointType = JointType.SpineBase; jointType <= JointType.ThumbRight; jointType++)
@@ -140,7 +92,9 @@ public class BodyController : MonoBehaviour
             //Windows.Kinect.Joint? targetJoint = null;
             
             Quaternion localRotation = new Quaternion();
-            Quaternion parentRotation = new Quaternion();
+
+            // Is parent rotation data needed?
+            //Quaternion parentRotation = new Quaternion();
 
             // Root joint
             if (jointType == JointType.SpineBase)
@@ -156,12 +110,7 @@ public class BodyController : MonoBehaviour
             // Has parent
             else
             {
-                //targetJoint = body.Joints[jointHierarchy[jointType]];
-                
-                //Transform jointObj = bodyObj.transform.FindChild(jointType.ToString());
-                //jointObj.localPosition = GetVector3FromJoint(sourceJoint);
-                
-                JointType parent = jointHierarchy[jointType];
+                //JointType parent = jointHierarchy[jointType];
                 JointType child = jointType;
 
                 localRotation = new Quaternion(
@@ -170,11 +119,11 @@ public class BodyController : MonoBehaviour
                     body.JointOrientations[child].Orientation.Z,
                     body.JointOrientations[child].Orientation.W);
 
-                parentRotation = new Quaternion(
+                /*parentRotation = new Quaternion(
                     body.JointOrientations[parent].Orientation.X,
                     body.JointOrientations[parent].Orientation.Y,
                     body.JointOrientations[parent].Orientation.Z,
-                    body.JointOrientations[parent].Orientation.W);
+                    body.JointOrientations[parent].Orientation.W);*/
             }
 
             // Testing body control
@@ -221,7 +170,6 @@ public class BodyController : MonoBehaviour
                     jointArmShoulderLowerLeft.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
                     jointArmShoulderLowerLeft.transform.Rotate(new Vector3(0, 180, 0));
-                    
                     break;
                     
                 case JointType.ElbowRight:
@@ -236,9 +184,9 @@ public class BodyController : MonoBehaviour
                         ConvertCoordSysFromKinectToUnity(localRotation);
                     jointArmElbowLeft.transform.Rotate(new Vector3(0, -90, 0));
 
-                    print("l x: " + jointArmElbowLeft.transform.rotation.eulerAngles.x);
-                    print("l y: " + jointArmElbowLeft.transform.rotation.eulerAngles.y);
-                    print("l z: " + jointArmElbowLeft.transform.rotation.eulerAngles.z);
+                    //print("l x: " + jointArmElbowLeft.transform.rotation.eulerAngles.x);
+                    //print("l y: " + jointArmElbowLeft.transform.rotation.eulerAngles.y);
+                    //print("l z: " + jointArmElbowLeft.transform.rotation.eulerAngles.z);
 
                     break;
 
@@ -257,7 +205,6 @@ public class BodyController : MonoBehaviour
                     break;
 
                 case JointType.HipRight:
-
                     //jointLegThighRight.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
                     */
@@ -273,15 +220,22 @@ public class BodyController : MonoBehaviour
                     jointLegThighRight.transform.Rotate(new Vector3(0, 90, 0));
                     break;
 
-                /*case JointType.AnkleLeft:
-                    jointLegAnkleLeft.transform.position = GetVector3FromJoint(sourceJoint);
+                case JointType.AnkleLeft:
+                    jointLegKneeLeft.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    jointLegKneeLeft.transform.Rotate(new Vector3(0, -90, 0));
                     break;
+
                 case JointType.AnkleRight:
-                    jointLegAnkleRight.transform.position = GetVector3FromJoint(sourceJoint);
+                    jointLegKneeRight.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    jointLegKneeRight.transform.Rotate(new Vector3(0, 90, 0));
                     break;
-                case JointType.FootLeft:
+
+                /*case JointType.FootLeft:
                     jointLegToesLeft.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
+
                 case JointType.FootRight:
                     jointLegToseRight.transform.position = GetVector3FromJoint(sourceJoint);
                     break;
@@ -290,6 +244,7 @@ public class BodyController : MonoBehaviour
         }
     }
 
+    // Still have problem
     private static Quaternion LockXRotation(Quaternion rotationIn)
     {
         /*Quaternion rotationOut = new Quaternion();
@@ -308,6 +263,8 @@ public class BodyController : MonoBehaviour
         return rotationOut;
     }
 
+    // Convert the coordinate system from kinect camera space to 
+    // Unity world space by flipping x axis
     private static Quaternion ConvertCoordSysFromKinectToUnity(Quaternion rotationIn)
     {
         Quaternion rotationOut = new Quaternion(
@@ -357,7 +314,7 @@ public class BodyController : MonoBehaviour
                 trackedIds.Add(body.TrackingId);
             }
         }
-
+        /*
         List<ulong> knownIds = new List<ulong>(bodyMap.Keys);
 
         // Delete untracked bodies
@@ -369,7 +326,7 @@ public class BodyController : MonoBehaviour
                 bodyMap.Remove(knownId);
             }
         }
-
+        */
         foreach (var body in bodyData)
         {
             if (body == null)
@@ -379,12 +336,12 @@ public class BodyController : MonoBehaviour
 
             if (body.IsTracked)
             {
-                if (!bodyMap.ContainsKey(body.TrackingId))
+                /*if (!bodyMap.ContainsKey(body.TrackingId))
                 {
                     bodyMap[body.TrackingId] = CreateBodyObj(body.TrackingId);
-                }
+                }*/
 
-                RefreshBodyObj(body, bodyMap[body.TrackingId]);
+                RefreshBodyObj(body);
             }
         }
     }
