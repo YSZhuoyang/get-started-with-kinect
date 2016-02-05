@@ -20,6 +20,19 @@ public class BodyManager : MonoBehaviour
         bodyData = null;
         sensor = KinectSensor.GetDefault();
 
+        CameraSpacePoint camPoint = new CameraSpacePoint();
+        camPoint.X = 0.1f;
+        camPoint.Y = 0.1f;
+        camPoint.Z = 1;
+
+        DepthSpacePoint depthPoint = sensor.CoordinateMapper.MapCameraPointToDepthSpace(camPoint);
+
+        print("Depth point x: " + depthPoint.X);
+        print("Depth point y: " + depthPoint.Y);
+
+        // Get room color
+
+
         if (sensor != null)
         {
             reader = sensor.BodyFrameSource.OpenReader();
