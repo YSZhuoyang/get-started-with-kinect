@@ -36,8 +36,11 @@ public class BodyController : MonoBehaviour
 
     // <child, parent> Note that the joint data from kinect is different from that 
     // in the avatars used in Unity (e.g. the orientation data of parent joint from 
-    // kinect maps to the orientation data of child joint of avatars)
-    private Dictionary<JointType, JointType> jointHierarchy = new Dictionary<JointType, JointType>()
+    // kinect maps to the orientation data of child joint of avatars), the orientation 
+    // data obtained from kinect is absolute orientation data
+
+    // Used to get relevant orientation
+    /*private Dictionary<JointType, JointType> jointHierarchy = new Dictionary<JointType, JointType>()
     {
         { JointType.HipRight ,JointType.SpineBase },
         { JointType.KneeRight, JointType.HipRight },
@@ -68,7 +71,7 @@ public class BodyController : MonoBehaviour
         { JointType.HandLeft, JointType.WristLeft },
         { JointType.HandTipLeft, JointType.HandLeft },
         { JointType.ThumbLeft, JointType.WristLeft },
-    };
+    };*/
     
     void Start()
     {
@@ -90,28 +93,29 @@ public class BodyController : MonoBehaviour
             //Windows.Kinect.Joint sourceJoint = body.Joints[jointType];
             // What does that Joint? mean?
             //Windows.Kinect.Joint? targetJoint = null;
-            
-            Quaternion localRotation = new Quaternion();
 
-            // Is parent rotation data needed?
+            //JointType parent;
+            JointType child;
+
+            Quaternion localRotation = new Quaternion();
             //Quaternion parentRotation = new Quaternion();
 
             // Root joint
             if (jointType == JointType.SpineBase)
             {
-                JointType root = jointType;
+                child = jointType;
 
                 localRotation = new Quaternion(
-                    body.JointOrientations[root].Orientation.X,
-                    body.JointOrientations[root].Orientation.Y,
-                    body.JointOrientations[root].Orientation.Z,
-                    body.JointOrientations[root].Orientation.W);
+                    body.JointOrientations[child].Orientation.X,
+                    body.JointOrientations[child].Orientation.Y,
+                    body.JointOrientations[child].Orientation.Z,
+                    body.JointOrientations[child].Orientation.W);
             }
             // Has parent
             else
             {
-                //JointType parent = jointHierarchy[jointType];
-                JointType child = jointType;
+                //parent = jointHierarchy[jointType];
+                child = jointType;
 
                 localRotation = new Quaternion(
                     body.JointOrientations[child].Orientation.X,
@@ -119,14 +123,12 @@ public class BodyController : MonoBehaviour
                     body.JointOrientations[child].Orientation.Z,
                     body.JointOrientations[child].Orientation.W);
 
-                /*parentRotation = new Quaternion(
-                    body.JointOrientations[parent].Orientation.X,
-                    body.JointOrientations[parent].Orientation.Y,
-                    body.JointOrientations[parent].Orientation.Z,
-                    body.JointOrientations[parent].Orientation.W);*/
+                //parentRotation = ...
             }
 
-            // Testing body control
+            // Apply joint orientation to each joint, still not clear why 
+            // some joints need to be rotated around x axis after applying
+            // the orientation data
             switch (jointType)
             {
                 case JointType.SpineBase:
@@ -157,7 +159,7 @@ public class BodyController : MonoBehaviour
                 case JointType.ShoulderLeft:
                     jointArmShoulderUpperLeft.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
-                    jointArmShoulderUpperLeft.transform.Rotate(new Vector3(0, 180, 0));
+                    jointArmShoulderUpperLeft.transform.Rotate(new Vector3(0, -90, 0));
                     break;
 
                 case JointType.ShoulderRight:
@@ -169,7 +171,7 @@ public class BodyController : MonoBehaviour
                 case JointType.ElbowLeft:
                     jointArmShoulderLowerLeft.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
-                    jointArmShoulderLowerLeft.transform.Rotate(new Vector3(0, 180, 0));
+                    jointArmShoulderLowerLeft.transform.Rotate(new Vector3(0, -180, 0));
                     break;
                     
                 case JointType.ElbowRight:
@@ -183,6 +185,8 @@ public class BodyController : MonoBehaviour
                     jointArmElbowLeft.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
                     jointArmElbowLeft.transform.Rotate(new Vector3(0, -90, 0));
+                    jointArmElbowLeft.transform.rotation =
+                        LockXRotation(jointArmElbowLeft.transform.rotation);
 
                     //print("l x: " + jointArmElbowLeft.transform.rotation.eulerAngles.x);
                     //print("l y: " + jointArmElbowLeft.transform.rotation.eulerAngles.y);
@@ -195,6 +199,8 @@ public class BodyController : MonoBehaviour
                     jointArmElbowRight.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
                     jointArmElbowRight.transform.Rotate(new Vector3(0, 90, 0));
+                    jointArmElbowRight.transform.rotation =
+                        LockXRotation(jointArmElbowRight.transform.rotation);
                     break;
                     
                 /*case JointType.HipLeft:
@@ -233,32 +239,43 @@ public class BodyController : MonoBehaviour
                     break;
 
                 /*case JointType.FootLeft:
-                    jointLegToesLeft.transform.position = GetVector3FromJoint(sourceJoint);
+                    jointLegAnkleLeft.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    //jointLegAnkleLeft.transform.Rotate(new Vector3(0, -90, 0));
                     break;
 
                 case JointType.FootRight:
-                    jointLegToseRight.transform.position = GetVector3FromJoint(sourceJoint);
+                    jointLegAnkleRight.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    //jointLegAnkleRight.transform.Rotate(new Vector3(0, 90, 0));
                     break;
                     */
+                default:
+                    break;
             }
         }
     }
 
-    // Still have problem
+    // Lock euler angle ([0, 45] and [330, 360])
     private static Quaternion LockXRotation(Quaternion rotationIn)
     {
-        /*Quaternion rotationOut = new Quaternion();
+        Quaternion rotationOut = new Quaternion();
+
+        float x = rotationIn.eulerAngles.x;
+
+        if (rotationIn.eulerAngles.x >= 45f && rotationIn.eulerAngles.x < 180f)
+        {
+            x = 45f;
+        }
+        else if (rotationIn.eulerAngles.x > 180f && rotationIn.eulerAngles.x <= 330f)
+        {
+            x = 330f;
+        }
+
         rotationOut.eulerAngles = new Vector3(
-            0, // z
+            x, // z
             rotationIn.eulerAngles.y, // x
             rotationIn.eulerAngles.z); // y
-        */
-
-        Quaternion rotationOut = new Quaternion(
-            0, 
-            rotationIn.y, 
-            rotationIn.z, 
-            rotationIn.w);
         
         return rotationOut;
     }
@@ -272,6 +289,13 @@ public class BodyController : MonoBehaviour
             -rotationIn.y, 
             -rotationIn.z, 
             rotationIn.w);
+
+        /*Quaternion rotationOut = new Quaternion();
+
+        rotationOut.x = 1.414f * 0.5f * (rotationIn.x + rotationIn.w);
+        rotationOut.y = 1.414f * 0.5f * (rotationIn.y - rotationIn.z);
+        rotationOut.z = 1.414f * 0.5f * (rotationIn.z + rotationIn.y);
+        rotationOut.w = 1.414f * 0.5f * (rotationIn.w - rotationIn.x);*/
         
         return rotationOut;
     }
