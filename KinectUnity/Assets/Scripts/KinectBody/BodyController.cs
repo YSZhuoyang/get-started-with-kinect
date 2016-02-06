@@ -6,8 +6,6 @@ using Windows.Kinect;
 
 public class BodyController : MonoBehaviour
 {
-    public GameObject bodyManager;
-
     public GameObject jointHead;
     public GameObject jointNeck;
     public GameObject jointSpineUpper;
@@ -30,8 +28,20 @@ public class BodyController : MonoBehaviour
     public GameObject jointArmElbowRight;
     public GameObject jointArmWristLeft;
     public GameObject jointArmWristRight;
-    
+
+    public GameObject bodyManager;
+
     private BodyManager bodyManagerScript;
+    private CoordinateMapper coordMapper;
+
+    private Body[] bodyData;
+    private byte[] colorData;
+    private ushort[] depthData;
+    private CameraSpacePoint[] camPoints;
+
+    private uint depthWidth;
+    private uint depthHeight;
+
     //private Dictionary<ulong, GameObject> bodyMap = new Dictionary<ulong, GameObject>();
 
     // <child, parent> Note that the joint data from kinect is different from that 
@@ -72,7 +82,7 @@ public class BodyController : MonoBehaviour
         { JointType.HandTipLeft, JointType.HandLeft },
         { JointType.ThumbLeft, JointType.WristLeft },
     };*/
-    
+
     void Start()
     {
 
@@ -256,6 +266,43 @@ public class BodyController : MonoBehaviour
         }
     }
 
+    private void TestProjectionMapping()
+    {
+        CameraSpacePoint camPoint = new CameraSpacePoint();
+        camPoint.X = 0.1f;
+        camPoint.Y = 0.1f;
+        camPoint.Z = 1;
+        
+        // Render the point being projected
+        Gizmos.color = Color.blue;
+        Gizmos.DrawSphere(new Vector3(camPoint.X, camPoint.Y, camPoint.Z), 1);
+        
+        DepthSpacePoint depthPoint = coordMapper.MapCameraPointToDepthSpace(camPoint);
+
+        print("Depth point x: " + depthPoint.X);
+        print("Depth point y: " + depthPoint.Y);
+        
+        // Get room 3d vertices data
+        if (camPoints == null)
+        {
+            camPoints = new CameraSpacePoint[depthData.Length];
+        }
+
+        coordMapper.MapDepthFrameToCameraSpace(depthData, camPoints);
+
+        CameraSpacePoint projectedPoint = coordMapper.MapDepthPointToCameraSpace(
+            depthPoint,
+            depthData[(uint)depthPoint.Y * depthWidth + (uint)depthPoint.X]);
+
+        print("Project 3d point x: " + projectedPoint.X);
+        print("Project 3d point y: " + projectedPoint.Y);
+        print("Project 3d point z: " + projectedPoint.Z);
+
+        // Render the projected point
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(new Vector3(projectedPoint.X, projectedPoint.Y, projectedPoint.Z), 1);
+    }
+
     // Lock euler angle ([0, 45] and [330, 360])
     private static Quaternion LockXRotation(Quaternion rotationIn)
     {
@@ -317,7 +364,13 @@ public class BodyController : MonoBehaviour
             return;
         }
 
-        Body[] bodyData = bodyManagerScript.GetBodyData();
+        bodyData = bodyManagerScript.GetBodyData();
+        colorData = bodyManagerScript.GetColorData();
+        depthData = bodyManagerScript.GetDepthData();
+
+        depthWidth = bodyManagerScript.GetDepthWidth();
+        depthHeight = bodyManagerScript.GetDepthHeight();
+        coordMapper = bodyManagerScript.GetCoordMapper();
 
         if (bodyData == null)
         {
@@ -368,5 +421,7 @@ public class BodyController : MonoBehaviour
                 RefreshBodyObj(body);
             }
         }
+
+        TestProjectionMapping();
     }
 }
