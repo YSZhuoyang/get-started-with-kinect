@@ -3,49 +3,65 @@ using System.Collections;
 
 public class FireBallController : MonoBehaviour
 {
+    private ParticleSystem fireBall;
     private ParticleSystem trailer;
-    private ParticleSystem.Particle[] particles;
+    private ParticleSystem.Particle[] trailerParticles;
 
-    private Vector3 preLoc;
-    private Vector3 currLoc;
-    private Vector3 velocity;
-    private Vector3 initVelocity;
+    private Vector3 fireBallPreLoc;
+    private Vector3 fireBallCurrLoc;
+    private Vector3 trailerCurrVelocity;
+    private Vector3 trailerInitVelocity;
 
     // Use this for initialization
     void Start()
     {
-        preLoc = transform.position;
-        currLoc = transform.position;
-
         trailer = GameObject.Find("Trailer").GetComponent<ParticleSystem>();
-        initVelocity = new Vector3(0f, 0f, 0.6f);
+        fireBall = GameObject.Find("FireBall").GetComponent<ParticleSystem>();
+
+        fireBallPreLoc = fireBall.transform.position;
+        fireBallCurrLoc = fireBall.transform.position;
+        trailerInitVelocity = new Vector3(0f, 0f, 0.6f);
     }
 
     // Update is called once per frame
     void LateUpdate()
     {
-        currLoc = transform.position;
-        velocity = (currLoc - preLoc) / Time.deltaTime;
-        preLoc = currLoc;
+        fireBallCurrLoc = fireBall.transform.position;
+        trailerCurrVelocity = (fireBallCurrLoc - fireBallPreLoc) / Time.deltaTime;
+        fireBallPreLoc = fireBallCurrLoc;
+        
+        // Test explosion
+        if (fireBall.isPlaying && (trailerCurrVelocity.z > 20f || trailerCurrVelocity.z < -20f))
+        {
+            fireBall.Stop();
+            trailer.Stop();
+        }
 
-        //print("Velocity x: " + velocity.x);
-        //print("Velocity y: " + velocity.y);
-        //print("Velocity z: " + velocity.z);
+        /*
+        if (fireBall.isStopped && (trailerCurrVelocity.z > 20f || trailerCurrVelocity.z < -20f))
+        {
+            fireBall.Play();
+            trailer.Play();
+        }*/
 
-        particles = new ParticleSystem.Particle[trailer.particleCount];
-        int numAlive = trailer.GetParticles(particles);
+        //print("Velocity x: " + trailerCurrVelocity.x);
+        //print("Velocity y: " + trailerCurrVelocity.y);
+        //print("Velocity z: " + trailerCurrVelocity.z);
+
+        trailerParticles = new ParticleSystem.Particle[trailer.particleCount];
+        int numAlive = trailer.GetParticles(trailerParticles);
 
         //print("Count: " + trailer.particleCount);
         //print("numAlive: " + numAlive);
 
         for (int i = 0; i < numAlive; i++)
         {
-            particles[i].velocity = new Vector3(
-                initVelocity.x - velocity.x * 0.5f, 
-                initVelocity.y + velocity.z * 0.5f, 
-                initVelocity.z - velocity.y * 0.5f);
+            trailerParticles[i].velocity = new Vector3(
+                trailerInitVelocity.x - trailerCurrVelocity.x * 0.5f,
+                trailerInitVelocity.y + trailerCurrVelocity.z * 0.5f,
+                trailerInitVelocity.z - trailerCurrVelocity.y * 0.5f);
         }
 
-        trailer.SetParticles(particles, numAlive);
+        trailer.SetParticles(trailerParticles, numAlive);
     }
 }
