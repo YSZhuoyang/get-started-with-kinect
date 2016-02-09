@@ -6,32 +6,34 @@ using Windows.Kinect;
 
 public class BodyController : MonoBehaviour
 {
-    public GameObject jointHead;
-    public GameObject jointNeck;
-    public GameObject jointSpineUpper;
-    public GameObject jointSpineMiddle;
-    public GameObject jointSpineLower;
-    public GameObject jointSpineBase;
-    public GameObject jointLegThighLeft;
-    public GameObject jointLegThighRight;
-    public GameObject jointLegKneeLeft;
-    public GameObject jointLegKneeRight;
-    public GameObject jointLegAnkleLeft;
-    public GameObject jointLegAnkleRight;
-    public GameObject jointLegToesLeft;
-    public GameObject jointLegToseRight;
+    private GameObject bodyManager;
+    private GameObject fireBallEffect;
+
+    private GameObject jointHead;
+    private GameObject jointNeck;
+    private GameObject jointSpineUpper;
+    private GameObject jointSpineMiddle;
+    private GameObject jointSpineLower;
+    private GameObject jointSpineBase;
+    private GameObject jointLegThighLeft;
+    private GameObject jointLegThighRight;
+    private GameObject jointLegKneeLeft;
+    private GameObject jointLegKneeRight;
+    private GameObject jointLegAnkleLeft;
+    private GameObject jointLegAnkleRight;
+    //private GameObject jointLegToesLeft;
+    //private GameObject jointLegToseRight;
     private GameObject jointArmShoulderUpperLeft;
     private GameObject jointArmShoulderUpperRight;
     private GameObject jointArmShoulderLowerLeft;
     private GameObject jointArmShoulderLowerRight;
     private GameObject jointArmElbowLeft;
     private GameObject jointArmElbowRight;
-    public GameObject jointArmWristLeft;
-    public GameObject jointArmWristRight;
-
-    public GameObject bodyManager;
+    private GameObject jointArmWristLeft;
+    private GameObject jointArmWristRight;
 
     private BodyManager bodyManagerScript;
+    private FireBallController fireBallController;
     private CoordinateMapper coordMapper;
 
     private Body[] bodyData;
@@ -85,12 +87,33 @@ public class BodyController : MonoBehaviour
 
     void Start()
     {
+        bodyManager = GameObject.Find("BodyManager");
+        fireBallEffect = GameObject.Find("FireBallEffect");
+
+        jointHead = GameObject.Find("mixamorig:Head");
+        jointNeck = GameObject.Find("mixamorig:Neck");
+        jointSpineUpper = GameObject.Find("mixamorig:Spine2");
+        jointSpineMiddle = GameObject.Find("mixamorig:Spine1");
+        jointSpineLower = GameObject.Find("mixamorig:Spine");
+        jointSpineBase = GameObject.Find("mixamorig:Hips");
+        jointLegThighLeft = GameObject.Find("mixamorig:LeftUpLeg");
+        jointLegThighRight = GameObject.Find("mixamorig:RightUpLeg");
+        jointLegKneeLeft = GameObject.Find("mixamorig:LeftLeg");
+        jointLegKneeRight = GameObject.Find("mixamorig:RightLeg");
+        jointLegAnkleLeft = GameObject.Find("mixamorig:LeftFoot");
+        jointLegAnkleRight = GameObject.Find("mixamorig:RightFoot");
+
+        //jointLegToesLeft = GameObject.Find("mixamorig:LeftToeBase");
+        //jointLegToseRight = GameObject.Find("mixamorig:RightToeBase");
+
         jointArmShoulderUpperLeft = GameObject.Find("mixamorig:LeftShoulder");
         jointArmShoulderUpperRight = GameObject.Find("mixamorig:RightShoulder");
         jointArmShoulderLowerLeft = GameObject.Find("mixamorig:LeftArm");
         jointArmShoulderLowerRight = GameObject.Find("mixamorig:RightArm");
         jointArmElbowLeft = GameObject.Find("mixamorig:LeftForeArm");
         jointArmElbowRight = GameObject.Find("mixamorig:RightForeArm");
+        jointArmWristLeft = GameObject.Find("mixamorig:LeftHand");
+        jointArmWristRight = GameObject.Find("mixamorig:RightHand");
     }
 
     // To be used for creating more than one controlled avatars
@@ -202,11 +225,6 @@ public class BodyController : MonoBehaviour
                     jointArmElbowLeft.transform.Rotate(new Vector3(0, -90, 0));
                     jointArmElbowLeft.transform.rotation =
                         LockXRotation(jointArmElbowLeft.transform.rotation);
-
-                    //print("l x: " + jointArmElbowLeft.transform.rotation.eulerAngles.x);
-                    //print("l y: " + jointArmElbowLeft.transform.rotation.eulerAngles.y);
-                    //print("l z: " + jointArmElbowLeft.transform.rotation.eulerAngles.z);
-
                     break;
 
                 // X need to be locked
@@ -217,7 +235,23 @@ public class BodyController : MonoBehaviour
                     jointArmElbowRight.transform.rotation =
                         LockXRotation(jointArmElbowRight.transform.rotation);
                     break;
-                    
+
+                case JointType.HandLeft:
+                    jointArmWristLeft.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    jointArmWristLeft.transform.Rotate(new Vector3(0, -90, 0));
+                    //jointArmWristLeft.transform.rotation =
+                    //    LockXRotation(jointArmWristLeft.transform.rotation);
+                    break;
+
+                case JointType.HandRight:
+                    jointArmWristRight.transform.rotation =
+                        ConvertCoordSysFromKinectToUnity(localRotation);
+                    jointArmWristRight.transform.Rotate(new Vector3(0, 90, 0));
+                    //jointArmWristRight.transform.rotation =
+                    //    LockXRotation(jointArmWristRight.transform.rotation);
+                    break;
+
                 /*case JointType.HipLeft:
                     jointArmElbowRight.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
@@ -227,8 +261,8 @@ public class BodyController : MonoBehaviour
 
                 case JointType.HipRight:
                     //jointLegThighRight.transform.position = GetVector3FromJoint(sourceJoint);
-                    break;
-                    */
+                    break;*/
+
                 case JointType.KneeLeft:
                     jointLegThighLeft.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
@@ -263,14 +297,15 @@ public class BodyController : MonoBehaviour
                     jointLegAnkleRight.transform.rotation =
                         ConvertCoordSysFromKinectToUnity(localRotation);
                     //jointLegAnkleRight.transform.Rotate(new Vector3(0, 90, 0));
-                    break;
-                    */
+                    break;*/
+
                 default:
                     break;
             }
         }
     }
 
+    // Gizmos throws an exception
     private void TestProjectionMapping()
     {
         CameraSpacePoint camPoint = new CameraSpacePoint();
@@ -351,6 +386,30 @@ public class BodyController : MonoBehaviour
         
         return rotationOut;
     }
+
+    void UpdateFireBall()
+    {
+        if (fireBallEffect == null)
+        {
+            return;
+        }
+
+        fireBallController = fireBallEffect.GetComponent<FireBallController>();
+
+        if (fireBallController != null)
+        {
+            fireBallController.SetGestures(
+                jointArmWristRight.transform.position, 
+                jointArmElbowRight.transform.position);
+        }
+
+        Vector3 fireBallPositionVec = new Vector3(
+            jointArmWristRight.transform.position.x,
+            jointArmWristRight.transform.position.y + 0.6f,
+            jointArmWristRight.transform.position.z);
+
+        fireBallEffect.transform.position = fireBallPositionVec;
+    }
     
     // Update is called once per frame
     void Update()
@@ -424,6 +483,7 @@ public class BodyController : MonoBehaviour
                 }*/
 
                 RefreshBodyObj(body);
+                UpdateFireBall();
             }
         }
 
