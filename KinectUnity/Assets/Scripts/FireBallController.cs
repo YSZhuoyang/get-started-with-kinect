@@ -31,7 +31,7 @@ public class FireBallController : MonoBehaviour
         fireBallPreLoc = fireBallCurrLoc;
         
         // Test explosion
-        if (fireBall.isPlaying && (trailerCurrVelocity.z > 20f || trailerCurrVelocity.z < -20f))
+        if (fireBall.isPlaying && (trailerCurrVelocity.z > 30f || trailerCurrVelocity.z < -30f))
         {
             fireBall.Stop();
             trailer.Stop();
