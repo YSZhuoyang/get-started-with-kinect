@@ -71,6 +71,14 @@ public class BodyManager : MonoBehaviour
                 //FrameSourceTypes.BodyIndex |
                 FrameSourceTypes.Body);
 
+            FrameDescription colorFD = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Rgba);
+            colorData = new byte[colorFD.LengthInPixels * BYTEPERPIXEL];
+
+            FrameDescription depthFD = sensor.DepthFrameSource.FrameDescription;
+            depthData = new ushort[depthFD.LengthInPixels];
+            depthWidth = (uint)depthFD.Width;
+            depthHeight = (uint)depthFD.Height;
+
             coordMapper = sensor.CoordinateMapper;
 
             if (!sensor.IsOpen)
@@ -95,7 +103,7 @@ public class BodyManager : MonoBehaviour
                     bodyData = new Body[sensor.BodyFrameSource.BodyCount];
                 }
 
-                if (colorData == null)
+                /*if (colorData == null)
                 {
                     FrameDescription colorFD = sensor.ColorFrameSource.FrameDescription;
                     colorData = new byte[colorFD.LengthInPixels * BYTEPERPIXEL];
@@ -107,17 +115,25 @@ public class BodyManager : MonoBehaviour
                     depthData = new ushort[depthFD.LengthInPixels * BYTEPERPIXEL];
                     depthWidth = (uint) depthFD.Width;
                     depthHeight = (uint) depthFD.Height;
-                }
+                }*/
                 
                 BodyFrame bodyFrame = frame.BodyFrameReference.AcquireFrame();
                 bodyFrame.GetAndRefreshBodyData(bodyData);
                 
                 ColorFrame colorFrame = frame.ColorFrameReference.AcquireFrame();
-                colorFrame.CopyConvertedFrameDataToArray(colorData, ColorImageFormat.Rgba);
+
+                if (colorFrame != null)
+                {
+                    colorFrame.CopyConvertedFrameDataToArray(colorData, ColorImageFormat.Rgba);
+                }
 
                 DepthFrame depthFrame = frame.DepthFrameReference.AcquireFrame();
-                depthFrame.CopyFrameDataToArray(depthData);
 
+                if (depthFrame != null)
+                {
+                    depthFrame.CopyFrameDataToArray(depthData);
+                }
+                
                 bodyFrame.Dispose();
                 colorFrame.Dispose();
                 depthFrame.Dispose();

@@ -20,12 +20,12 @@ public class BodyController : MonoBehaviour
     public GameObject jointLegAnkleRight;
     public GameObject jointLegToesLeft;
     public GameObject jointLegToseRight;
-    public GameObject jointArmShoulderUpperLeft;
-    public GameObject jointArmShoulderUpperRight;
-    public GameObject jointArmShoulderLowerLeft;
-    public GameObject jointArmShoulderLowerRight;
-    public GameObject jointArmElbowLeft;
-    public GameObject jointArmElbowRight;
+    private GameObject jointArmShoulderUpperLeft;
+    private GameObject jointArmShoulderUpperRight;
+    private GameObject jointArmShoulderLowerLeft;
+    private GameObject jointArmShoulderLowerRight;
+    private GameObject jointArmElbowLeft;
+    private GameObject jointArmElbowRight;
     public GameObject jointArmWristLeft;
     public GameObject jointArmWristRight;
 
@@ -85,7 +85,12 @@ public class BodyController : MonoBehaviour
 
     void Start()
     {
-
+        jointArmShoulderUpperLeft = GameObject.Find("mixamorig:LeftShoulder");
+        jointArmShoulderUpperRight = GameObject.Find("mixamorig:RightShoulder");
+        jointArmShoulderLowerLeft = GameObject.Find("mixamorig:LeftArm");
+        jointArmShoulderLowerRight = GameObject.Find("mixamorig:RightArm");
+        jointArmElbowLeft = GameObject.Find("mixamorig:LeftForeArm");
+        jointArmElbowRight = GameObject.Find("mixamorig:RightForeArm");
     }
 
     // To be used for creating more than one controlled avatars
@@ -422,6 +427,6 @@ public class BodyController : MonoBehaviour
             }
         }
 
-        TestProjectionMapping();
+        //TestProjectionMapping();
     }
 }
