@@ -2,13 +2,12 @@ using UnityEngine;
 using System.Collections;
 using Windows.Kinect;
 
-// Receiving (body frame) data from kinect
+// Receiving (frame) data from kinect
 public class BodyManager : MonoBehaviour
 {
     private const ushort BYTEPERPIXEL = 4;
 
     private KinectSensor sensor;
-    //private BodyFrameReader bodyFramrReader;
     private MultiSourceFrameReader reader;
 
     private Body[] bodyData;
@@ -63,13 +62,20 @@ public class BodyManager : MonoBehaviour
 
         if (sensor != null)
         {
-            //bodyFramrReader = sensor.BodyFrameSource.OpenReader();
             reader = sensor.OpenMultiSourceFrameReader(
                 //FrameSourceTypes.Infrared |
                 FrameSourceTypes.Color |
                 FrameSourceTypes.Depth |
                 //FrameSourceTypes.BodyIndex |
                 FrameSourceTypes.Body);
+
+            FrameDescription colorFD = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Rgba);
+            colorData = new byte[colorFD.LengthInPixels * BYTEPERPIXEL];
+
+            FrameDescription depthFD = sensor.DepthFrameSource.FrameDescription;
+            depthData = new ushort[depthFD.LengthInPixels];
+            depthWidth = (uint)depthFD.Width;
+            depthHeight = (uint)depthFD.Height;
 
             coordMapper = sensor.CoordinateMapper;
 
@@ -83,7 +89,7 @@ public class BodyManager : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        // Read frame data
+        // Read frame data from multiple sources
         if (reader != null)
         {
             var frame = reader.AcquireLatestFrame();
@@ -94,58 +100,37 @@ public class BodyManager : MonoBehaviour
                 {
                     bodyData = new Body[sensor.BodyFrameSource.BodyCount];
                 }
-
-                if (colorData == null)
-                {
-                    FrameDescription colorFD = sensor.ColorFrameSource.FrameDescription;
-                    colorData = new byte[colorFD.LengthInPixels * BYTEPERPIXEL];
-                }
-
-                if (depthData == null)
-                {
-                    FrameDescription depthFD = sensor.DepthFrameSource.FrameDescription;
-                    depthData = new ushort[depthFD.LengthInPixels * BYTEPERPIXEL];
-                    depthWidth = (uint) depthFD.Width;
-                    depthHeight = (uint) depthFD.Height;
-                }
                 
                 BodyFrame bodyFrame = frame.BodyFrameReference.AcquireFrame();
-                bodyFrame.GetAndRefreshBodyData(bodyData);
+
+                if (bodyData != null)
+                {
+                    bodyFrame.GetAndRefreshBodyData(bodyData);
+                    bodyFrame.Dispose();
+                }
                 
                 ColorFrame colorFrame = frame.ColorFrameReference.AcquireFrame();
-                colorFrame.CopyConvertedFrameDataToArray(colorData, ColorImageFormat.Rgba);
+
+                if (colorFrame != null)
+                {
+                    colorFrame.CopyConvertedFrameDataToArray(colorData, ColorImageFormat.Rgba);
+                    colorFrame.Dispose();
+                }
 
                 DepthFrame depthFrame = frame.DepthFrameReference.AcquireFrame();
-                depthFrame.CopyFrameDataToArray(depthData);
 
-                bodyFrame.Dispose();
-                colorFrame.Dispose();
-                depthFrame.Dispose();
-
+                if (depthFrame != null)
+                {
+                    depthFrame.CopyFrameDataToArray(depthData);
+                    depthFrame.Dispose();
+                }
+                
                 bodyFrame = null;
                 colorFrame = null;
                 depthFrame = null;
-                
                 frame = null;
             }
         }
-        
-        /*if (bodyFramrReader != null)
-        {
-            var frame = bodyFramrReader.AcquireLatestFrame();
-
-            if (frame != null)
-            {
-                if (bodyData == null)
-                {
-                    bodyData = new Body[sensor.BodyFrameSource.BodyCount];
-                }
-
-                frame.GetAndRefreshBodyData(bodyData);
-                frame.Dispose();
-                frame = null;
-            }
-        }*/
     }
 
     void OnApplicationQuit()
@@ -155,13 +140,7 @@ public class BodyManager : MonoBehaviour
             reader.Dispose();
             reader = null;
         }
-
-        /*if (bodyFramrReader != null)
-        {
-            bodyFramrReader.Dispose();
-            bodyFramrReader = null;
-        }*/
-
+        
         if (sensor != null)
         {
             if (sensor.IsOpen)
