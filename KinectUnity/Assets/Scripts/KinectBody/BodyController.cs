@@ -123,7 +123,7 @@ public class BodyController : MonoBehaviour
     }
 
     // Update joint data (orientations) of the body
-    private void RefreshBodyObj(Body body)
+    private void RefreshJointOrientation(Body body)
     {
         // Breath first Traversal
         for (JointType jointType = JointType.SpineBase; jointType <= JointType.ThumbRight; jointType++)
@@ -344,7 +344,7 @@ public class BodyController : MonoBehaviour
     }
 
     // Lock euler angle ([0, 45] and [330, 360])
-    private static Quaternion LockXRotation(Quaternion rotationIn)
+    private Quaternion LockXRotation(Quaternion rotationIn)
     {
         Quaternion rotationOut = new Quaternion();
 
@@ -369,7 +369,7 @@ public class BodyController : MonoBehaviour
 
     // Convert the coordinate system from kinect camera space to 
     // Unity world space by flipping x axis
-    private static Quaternion ConvertCoordSysFromKinectToUnity(Quaternion rotationIn)
+    private Quaternion ConvertCoordSysFromKinectToUnity(Quaternion rotationIn)
     {
         Quaternion rotationOut = new Quaternion(
             rotationIn.x, 
@@ -482,7 +482,7 @@ public class BodyController : MonoBehaviour
                     bodyMap[body.TrackingId] = CreateBodyObj(body.TrackingId);
                 }*/
 
-                RefreshBodyObj(body);
+                RefreshJointOrientation(body);
                 UpdateFireBall();
             }
         }
