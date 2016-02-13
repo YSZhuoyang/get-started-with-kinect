@@ -41,6 +41,9 @@ public class BodyController : MonoBehaviour
     private ushort[] depthData;
     private CameraSpacePoint[] camPoints;
 
+    //private Vector3 rightHandPreLoc;
+    //private Vector3 rightHandCurrLoc;
+
     private uint depthWidth;
     private uint depthHeight;
 
@@ -114,6 +117,9 @@ public class BodyController : MonoBehaviour
         jointArmElbowRight = GameObject.Find("mixamorig:RightForeArm");
         jointArmWristLeft = GameObject.Find("mixamorig:LeftHand");
         jointArmWristRight = GameObject.Find("mixamorig:RightHand");
+
+        //rightHandPreLoc = new Vector3();
+        //rightHandCurrLoc = new Vector3();
     }
 
     // To be used for creating more than one controlled avatars
@@ -387,7 +393,20 @@ public class BodyController : MonoBehaviour
         return rotationOut;
     }
 
-    void UpdateFireBall()
+    /*private Vector3 GetRightHandMovingVel(Body body)
+    {
+        rightHandCurrLoc.x = body.Joints[JointType.HandRight].Position.X;
+        rightHandCurrLoc.y = body.Joints[JointType.HandRight].Position.Y;
+        rightHandCurrLoc.z = body.Joints[JointType.HandRight].Position.Z;
+
+        Vector3 rightHandMovingVel = rightHandCurrLoc - rightHandPreLoc;
+
+        rightHandPreLoc = rightHandCurrLoc;
+
+        return rightHandMovingVel;
+    }*/
+
+    private void UpdateFireBall(Body body)
     {
         if (fireBallEffect == null)
         {
@@ -400,7 +419,9 @@ public class BodyController : MonoBehaviour
         {
             fireBallController.SetGestures(
                 jointArmWristRight.transform.position, 
-                jointArmElbowRight.transform.position);
+                jointArmElbowRight.transform.position,
+                //GetRightHandMovingVel(body), 
+                body.HandRightState);
         }
 
         Vector3 fireBallPositionVec = new Vector3(
@@ -483,7 +504,7 @@ public class BodyController : MonoBehaviour
                 }*/
 
                 RefreshJointOrientation(body);
-                UpdateFireBall();
+                UpdateFireBall(body);
             }
         }
 
