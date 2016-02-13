@@ -5,18 +5,13 @@ using Windows.Kinect;
 public class FireBallAttack : MonoBehaviour
 {
     private GameObject cube;
-    private ParticleSystem explosion;
-    private ParticleSystem sputtering;
-    private ParticleSystem debris;
+    private GameObject explosion;
+    private GameObject debris;
 
     // Use this for initialization
     void Start()
     {
         cube = GameObject.FindGameObjectWithTag("Enemy");
-        explosion = GameObject.Find("Explosion").GetComponent<ParticleSystem>();
-        sputtering = GameObject.Find("Sputtering").GetComponent<ParticleSystem>();
-        debris = GameObject.Find("Debris").GetComponent<ParticleSystem>();
-
     }
 
     void SpawnCube()
@@ -35,13 +30,11 @@ public class FireBallAttack : MonoBehaviour
             Destroy(col.gameObject);
 
             // Trigger explosion
-            Instantiate(explosion, col.transform.position, Quaternion.identity);
-
+            Instantiate(Resources.Load<GameObject>("Explosion"), col.transform.position, Quaternion.identity);
+            Instantiate(Resources.Load<GameObject>("Debris"), col.transform.position, Quaternion.identity);
+            
             // Sleep and destroy explosion
-
-            //ParticleSystem.EmissionModule explosionEmission = explosion.emission;
-            //ParticleSystem.EmissionModule sputteringEmission = sputtering.emission;
-            //ParticleSystem.EmissionModule debrisEmission = debris.emission;
+            
         }
     }
 
