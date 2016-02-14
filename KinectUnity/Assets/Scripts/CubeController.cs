@@ -21,7 +21,7 @@ public class CubeController : MonoBehaviour
             // Generate a new cube
             Instantiate(
                 Resources.Load<GameObject>("Cube"),
-                new Vector3(0f, 0.2f, Random.Range(0f, 2f)),
+                new Vector3(0f, 0.2f, 1f), // Random.Range(0f, 2f)),
                 Quaternion.identity);
         }
 	}

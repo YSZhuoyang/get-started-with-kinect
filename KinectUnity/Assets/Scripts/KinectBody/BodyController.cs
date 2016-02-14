@@ -7,7 +7,7 @@ using Windows.Kinect;
 public class BodyController : MonoBehaviour
 {
     private GameObject bodyManager;
-    private GameObject fireBallEffect;
+    private GameObject fireBallController;
 
     private GameObject jointHead;
     private GameObject jointNeck;
@@ -33,7 +33,7 @@ public class BodyController : MonoBehaviour
     private GameObject jointArmWristRight;
 
     private BodyManager bodyManagerScript;
-    private FireBallController fireBallController;
+    private FireBallController fireBallControllerScript;
     private CoordinateMapper coordMapper;
 
     private Body[] bodyData;
@@ -91,7 +91,7 @@ public class BodyController : MonoBehaviour
     void Start()
     {
         bodyManager = GameObject.Find("BodyManager");
-        fireBallEffect = GameObject.Find("FireBallEffect");
+        fireBallController = GameObject.Find("FireBallController");
 
         jointHead = GameObject.Find("mixamorig:Head");
         jointNeck = GameObject.Find("mixamorig:Neck");
@@ -408,28 +408,32 @@ public class BodyController : MonoBehaviour
 
     private void UpdateFireBall(Body body)
     {
-        if (fireBallEffect == null)
+        if (fireBallController == null)
         {
             return;
         }
 
-        fireBallController = fireBallEffect.GetComponent<FireBallController>();
+        fireBallControllerScript = fireBallController.GetComponent<FireBallController>();
 
-        if (fireBallController != null)
+        if (fireBallController == null)
         {
-            fireBallController.SetGestures(
-                jointArmWristRight.transform.position, 
-                jointArmElbowRight.transform.position,
-                //GetRightHandMovingVel(body), 
-                body.HandRightState);
+            print("Error: FireBallController script not found");
+
+            return;
         }
 
-        Vector3 fireBallPositionVec = new Vector3(
+        fireBallControllerScript.SetGestures(
+            jointArmWristRight.transform.position,
+            jointArmElbowRight.transform.position,
+            //GetRightHandMovingVel(body),
+            body.HandRightState);
+
+        /*Vector3 fireBallPositionVec = new Vector3(
             jointArmWristRight.transform.position.x,
-            jointArmWristRight.transform.position.y + 0.6f,
+            jointArmWristRight.transform.position.y + 0.5f,
             jointArmWristRight.transform.position.z);
 
-        fireBallEffect.transform.position = fireBallPositionVec;
+        fireBallEffect.transform.position = fireBallPositionVec;*/
     }
     
     // Update is called once per frame
