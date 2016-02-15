@@ -4,7 +4,7 @@ using Windows.Kinect;
 
 public class FireBallController : MonoBehaviour
 {
-    private static float FLYINGDURATION = 3f;
+    private static float FLYINGDURATION = 2f;
 
     private float flyingStartTime;
 
@@ -51,6 +51,7 @@ public class FireBallController : MonoBehaviour
             fireBallEffect.transform.position = rightHandPosition;
             fireBallCurrLoc = rightHandPosition;
             fireBallPreLoc = rightHandPosition;
+            currVelocity = new Vector3(0f, 0f, 0f);
         }
     }
 
@@ -81,24 +82,15 @@ public class FireBallController : MonoBehaviour
 
     private void ResponseToGesture()
     {
-        // Update position
-        if (fireBallState == FireBallState.holding)
-        {
-            fireBallEffect.transform.position = rightHandPosition;
-        }
-        else if (fireBallState == FireBallState.flying)
-        {
-            fireBallEffect.transform.position += currVelocity * Time.deltaTime;
-        }
-
         if (rightHandPosition.y > rightElbowPosition.y && 
-            handRightState == HandState.Open)
+            handRightState == HandState.Open && 
+            fireBallState == FireBallState.extinguished)
         {
             EnableFireBall();
         }
 
-        if (rightElbowPosition.y > rightHandPosition.y || 
-            handRightState == HandState.Closed)
+        if ((rightElbowPosition.y > rightHandPosition.y || handRightState == HandState.Closed) && 
+            fireBallState == FireBallState.holding)
         {
             DisableFireBall();
         }
@@ -112,7 +104,7 @@ public class FireBallController : MonoBehaviour
         if (FireBallEnabled() && 
             fireBallState == FireBallState.holding &&
             //Mathf.Abs(rightHandPosition.y - rightElbowPosition.y) < 0.5f &&
-            fireBallSpeed > 2 && 
+            fireBallSpeed > 5 && 
             handRightState == HandState.Open)
         {
             fireBallState = FireBallState.flying;
@@ -123,7 +115,7 @@ public class FireBallController : MonoBehaviour
     private void ComputeVelocity()
     {
         // Compute fireBall moving velocity
-        fireBallCurrLoc = fireBallEffect.transform.position;
+        fireBallCurrLoc = rightHandPosition; //fireBallEffect.transform.position;
         currVelocity = (fireBallCurrLoc - fireBallPreLoc) / Time.deltaTime;
         fireBallPreLoc = fireBallCurrLoc;
     }
@@ -137,10 +129,13 @@ public class FireBallController : MonoBehaviour
     void LateUpdate()
     {
         ResponseToGesture();
-        
+
         if (fireBallState == FireBallState.holding)
         {
             ComputeVelocity();
+
+            // Update fire ball position based on right hand position
+            fireBallEffect.transform.position = fireBallCurrLoc;
         }
         else if (fireBallState == FireBallState.flying)
         {
@@ -149,6 +144,10 @@ public class FireBallController : MonoBehaviour
                 // Trigger explosion
                 Instantiate(Resources.Load<GameObject>("Explosion"), fireBallEffect.transform.position, Quaternion.identity);
                 DisableFireBall();
+            }
+            else
+            {
+                fireBallEffect.transform.position += currVelocity * Time.deltaTime;
             }
         }
     }

@@ -1,12 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class FireBallTrailerController : MonoBehaviour
 {
     private static float TRAILERSTARTSPEED = 2f;
-
-    private Vector3 fireBallPreLoc;
-    private Vector3 fireBallCurrLoc;
+    
     private Vector3 trailerCurrVelocity;
     private Vector3 trailerInitVelocity;
 
@@ -18,8 +16,6 @@ public class FireBallTrailerController : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        fireBallPreLoc = new Vector3();
-        fireBallCurrLoc = new Vector3();
         trailerInitVelocity = new Vector3(0f, 0f, TRAILERSTARTSPEED);
 
         trailer = GameObject.Find("Trailer").GetComponent<ParticleSystem>();
@@ -28,11 +24,6 @@ public class FireBallTrailerController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        // Compute fireBall moving velocity
-        //fireBallCurrLoc = transform.position;
-        //trailerCurrVelocity = (fireBallCurrLoc - fireBallPreLoc) / Time.deltaTime;
-        //fireBallPreLoc = fireBallCurrLoc;
-
         fireBallControllerScript = GameObject.Find("FireBallController").GetComponent<FireBallController>();
 
         if (fireBallControllerScript == null)
