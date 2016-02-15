@@ -13,7 +13,7 @@ public class BodyManager : MonoBehaviour
     private Body[] bodyData;
     private byte[] colorData;
     private ushort[] depthData;
-    CameraSpacePoint[] camPoints;
+    private CameraSpacePoint[] camPoints;
 
     private uint depthWidth;
     private uint depthHeight;
@@ -33,6 +33,11 @@ public class BodyManager : MonoBehaviour
     public ushort[] GetDepthData()
     {
         return depthData;
+    }
+
+    public CameraSpacePoint[] GetCameraSpaceData()
+    {
+        return camPoints;
     }
 
     public uint GetDepthWidth()
@@ -123,6 +128,9 @@ public class BodyManager : MonoBehaviour
                 {
                     depthFrame.CopyFrameDataToArray(depthData);
                     depthFrame.Dispose();
+
+                    camPoints = new CameraSpacePoint[depthData.Length];
+                    coordMapper.MapDepthFrameToCameraSpace(depthData, camPoints);
                 }
                 
                 bodyFrame = null;
