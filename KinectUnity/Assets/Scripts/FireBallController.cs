@@ -4,9 +4,12 @@ using Windows.Kinect;
 
 public class FireBallController : MonoBehaviour
 {
-    private static float FLYINGDURATION = 2f;
+    private static float FLYING_MAX_DURATION = 2f;
+    private static float SHOOTING_GESTURE_MAX_DURATION = 0.4f;
+    private static float SHOOTING_GESTURE_MAX_DISTANCE = 0.4f;
 
     private float flyingStartTime;
+    private float shootingGestureStartTime;
 
     private GameObject fireBallEffect;
     private ParticleSystem.Particle[] trailerParticles;
@@ -15,11 +18,16 @@ public class FireBallController : MonoBehaviour
     private Vector3 fireBallCurrLoc;
     private Vector3 currVelocity;
 
+    private Vector3 shootingGestureStartPos;
+    private Vector3 shootingGestureEndPos;
+
     private Vector3 rightHandPosition;
     private Vector3 rightElbowPosition;
 
     private HandState handRightState;
-    public FireBallState fireBallState;
+    private FireBallState fireBallState;
+
+    private bool shootingFireBallGestureDetected;
 
     public enum FireBallState
     {
@@ -38,6 +46,8 @@ public class FireBallController : MonoBehaviour
         
         fireBallState = FireBallState.extinguished;
         handRightState = HandState.Closed;
+
+        shootingFireBallGestureDetected = false;
     }
 
     private void EnableFireBall()
@@ -65,21 +75,6 @@ public class FireBallController : MonoBehaviour
         }
     }
 
-    public Vector3 GetVelocity()
-    {
-        return currVelocity;
-    }
-
-    public void SetGestures(
-        Vector3 rightHandPositionIn, 
-        Vector3 rightElbowPositionIn, 
-        HandState handRightStateIn)
-    {
-        rightHandPosition = rightHandPositionIn;
-        rightElbowPosition = rightElbowPositionIn;
-        handRightState = handRightStateIn;
-    }
-
     private void ResponseToGesture()
     {
         if (rightHandPosition.y > rightElbowPosition.y && 
@@ -94,28 +89,54 @@ public class FireBallController : MonoBehaviour
         {
             DisableFireBall();
         }
-
-        float fireBallSpeed = Mathf.Sqrt(
-            currVelocity.x * currVelocity.x +
-            currVelocity.y * currVelocity.y +
-            currVelocity.z * currVelocity.z
-            );
         
         if (FireBallEnabled() && 
-            fireBallState == FireBallState.holding &&
-            //Mathf.Abs(rightHandPosition.y - rightElbowPosition.y) < 0.5f &&
-            fireBallSpeed > 5 && 
+            fireBallState == FireBallState.holding && 
             handRightState == HandState.Open)
         {
-            fireBallState = FireBallState.flying;
-            flyingStartTime = Time.time;
+            float fireBallSpeed = Mathf.Sqrt(
+                currVelocity.x * currVelocity.x +
+                currVelocity.y * currVelocity.y +
+                currVelocity.z * currVelocity.z
+                );
+
+            if (fireBallSpeed > 5)
+            {
+                if (!shootingFireBallGestureDetected)
+                {
+                    shootingFireBallGestureDetected = true;
+                    shootingGestureStartTime = Time.time;
+                    shootingGestureStartPos = rightHandPosition;
+                }
+                else if (Time.time - shootingGestureStartTime < SHOOTING_GESTURE_MAX_DURATION)
+                {
+                    shootingGestureEndPos = rightHandPosition;
+
+                    Vector3 movingVec = shootingGestureEndPos - shootingGestureStartPos;
+                    float movingLength = Mathf.Sqrt(
+                        movingVec.x * movingVec.x +
+                        movingVec.y * movingVec.y +
+                        movingVec.z * movingVec.z);
+
+                    if (movingLength > SHOOTING_GESTURE_MAX_DISTANCE)
+                    {
+                        fireBallState = FireBallState.flying;
+                        flyingStartTime = Time.time;
+                        shootingFireBallGestureDetected = false;
+                    }
+                }
+                else if (Time.time - shootingGestureStartTime > SHOOTING_GESTURE_MAX_DURATION)
+                {
+                    shootingFireBallGestureDetected = false;
+                }
+            }
         }
     }
     
     private void ComputeVelocity()
     {
         // Compute fireBall moving velocity
-        fireBallCurrLoc = rightHandPosition; //fireBallEffect.transform.position;
+        fireBallCurrLoc = rightHandPosition;
         currVelocity = (fireBallCurrLoc - fireBallPreLoc) / Time.deltaTime;
         fireBallPreLoc = fireBallCurrLoc;
     }
@@ -139,7 +160,7 @@ public class FireBallController : MonoBehaviour
         }
         else if (fireBallState == FireBallState.flying)
         {
-            if (Time.time - flyingStartTime > FLYINGDURATION)
+            if (Time.time - flyingStartTime > FLYING_MAX_DURATION)
             {
                 // Trigger explosion
                 Instantiate(Resources.Load<GameObject>("Explosion"), fireBallEffect.transform.position, Quaternion.identity);
@@ -147,6 +168,7 @@ public class FireBallController : MonoBehaviour
             }
             else
             {
+                // Fire ball flying
                 fireBallEffect.transform.position += currVelocity * Time.deltaTime;
             }
         }
@@ -155,5 +177,20 @@ public class FireBallController : MonoBehaviour
     public void SetFireBallState(FireBallState fireBallStateIn)
     {
         fireBallState = fireBallStateIn;
+    }
+
+    public void SetGestures(
+        Vector3 rightHandPositionIn,
+        Vector3 rightElbowPositionIn,
+        HandState handRightStateIn)
+    {
+        rightHandPosition = rightHandPositionIn;
+        rightElbowPosition = rightElbowPositionIn;
+        handRightState = handRightStateIn;
+    }
+
+    public Vector3 GetVelocity()
+    {
+        return currVelocity;
     }
 }

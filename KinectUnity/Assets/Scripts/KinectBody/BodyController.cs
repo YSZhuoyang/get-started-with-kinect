@@ -9,6 +9,7 @@ public class BodyController : MonoBehaviour
     private GameObject bodyManager;
     private GameObject fireBallController;
 
+    private GameObject root;
     private GameObject jointHead;
     private GameObject jointNeck;
     private GameObject jointSpineUpper;
@@ -93,6 +94,7 @@ public class BodyController : MonoBehaviour
         bodyManager = GameObject.Find("BodyManager");
         fireBallController = GameObject.Find("FireBallController");
 
+        root = GameObject.Find("Remy");
         jointHead = GameObject.Find("mixamorig:Head");
         jointNeck = GameObject.Find("mixamorig:Neck");
         jointSpineUpper = GameObject.Find("mixamorig:Spine2");
@@ -126,6 +128,17 @@ public class BodyController : MonoBehaviour
     private void CreateBodyObj(ulong id)
     {
         
+    }
+
+    private void UpdateBodyPos(Body body)
+    {
+        float spineBaseOffsetY = 1.8f;
+        Vector3 spineBaseVec = new Vector3(
+            body.Joints[JointType.SpineBase].Position.X,
+            body.Joints[JointType.SpineBase].Position.Y + spineBaseOffsetY,
+            body.Joints[JointType.SpineBase].Position.Z);
+
+        jointSpineBase.transform.position = spineBaseVec;
     }
 
     // Update joint data (orientations) of the body
@@ -508,6 +521,7 @@ public class BodyController : MonoBehaviour
                 }*/
 
                 RefreshJointOrientation(body);
+                UpdateBodyPos(body);
                 UpdateFireBall(body);
             }
         }

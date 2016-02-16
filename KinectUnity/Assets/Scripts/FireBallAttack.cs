@@ -47,7 +47,7 @@ public class FireBallAttack : MonoBehaviour
                 return;
             }
 
-            fireBallControllerScript.fireBallState = FireBallController.FireBallState.extinguished;
+            fireBallControllerScript.SetFireBallState(FireBallController.FireBallState.extinguished);
         }
         else
         {
@@ -74,7 +74,7 @@ public class FireBallAttack : MonoBehaviour
                 return;
             }
 
-            fireBallControllerScript.fireBallState = FireBallController.FireBallState.extinguished;
+            fireBallControllerScript.SetFireBallState(FireBallController.FireBallState.extinguished);
         }
     }
 }

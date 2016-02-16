@@ -108,7 +108,7 @@ public class BodyManager : MonoBehaviour
                 
                 BodyFrame bodyFrame = frame.BodyFrameReference.AcquireFrame();
 
-                if (bodyData != null)
+                if (bodyFrame != null && bodyData != null)
                 {
                     bodyFrame.GetAndRefreshBodyData(bodyData);
                     bodyFrame.Dispose();
