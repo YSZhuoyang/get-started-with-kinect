@@ -68,17 +68,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\BodyStub.cs" />
-    <Compile Include="Assets\Scripts\CubeController.cs" />
-    <Compile Include="Assets\Scripts\DebrisController.cs" />
-    <Compile Include="Assets\Scripts\ExplosionController.cs" />
-    <Compile Include="Assets\Scripts\FireBallAttack.cs" />
-    <Compile Include="Assets\Scripts\FireBallController.cs" />
-    <Compile Include="Assets\Scripts\FireBallTrailerController.cs" />
+    <Compile Include="Assets\Scripts\Enemy\CubeController.cs" />
+    <Compile Include="Assets\Scripts\Enemy\DebrisController.cs" />
+    <Compile Include="Assets\Scripts\FireBall\ExplosionController.cs" />
+    <Compile Include="Assets\Scripts\FireBall\FireBallAttack.cs" />
+    <Compile Include="Assets\Scripts\FireBall\FireBallController.cs" />
+    <Compile Include="Assets\Scripts\FireBall\FireBallTrailerController.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyController.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyManager.cs" />
+    <Compile Include="Assets\Scripts\KinectBody\BodyStub.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyView.cs" />
-    <Compile Include="Assets\Scripts\LightningController.cs" />
+    <Compile Include="Assets\Scripts\Lightning\LightningAttack.cs" />
+    <Compile Include="Assets\Scripts\Lightning\LightningController.cs" />
     <Compile Include="Assets\Scripts\RoomMeshRenderer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />

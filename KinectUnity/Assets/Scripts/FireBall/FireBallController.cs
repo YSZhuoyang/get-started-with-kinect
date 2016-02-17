@@ -24,6 +24,8 @@ public class FireBallController : MonoBehaviour
     private Vector3 rightHandPosition;
     private Vector3 rightElbowPosition;
 
+    private UnityEngine.AudioSource fireBallFlyingAudio;
+
     private HandState handRightState;
     private FireBallState fireBallState;
 
@@ -43,7 +45,9 @@ public class FireBallController : MonoBehaviour
         currVelocity = new Vector3();
         fireBallPreLoc = new Vector3();
         fireBallCurrLoc = new Vector3();
-        
+
+        fireBallFlyingAudio = GetComponent<UnityEngine.AudioSource>();
+
         fireBallState = FireBallState.extinguished;
         handRightState = HandState.Closed;
 
@@ -123,6 +127,11 @@ public class FireBallController : MonoBehaviour
                         fireBallState = FireBallState.flying;
                         flyingStartTime = Time.time;
                         shootingFireBallGestureDetected = false;
+
+                        if (!fireBallFlyingAudio.isPlaying)
+                        {
+                            fireBallFlyingAudio.Play();
+                        }
                     }
                 }
                 else if (Time.time - shootingGestureStartTime > SHOOTING_GESTURE_MAX_DURATION)
@@ -165,12 +174,23 @@ public class FireBallController : MonoBehaviour
                 // Trigger explosion
                 Instantiate(Resources.Load<GameObject>("Explosion"), fireBallEffect.transform.position, Quaternion.identity);
                 DisableFireBall();
+
+                // Stop playing audio
+                StopFlyingAudioPlaying();
             }
             else
             {
                 // Fire ball flying
                 fireBallEffect.transform.position += currVelocity * Time.deltaTime;
             }
+        }
+    }
+
+    public void StopFlyingAudioPlaying()
+    {
+        if (fireBallFlyingAudio.isPlaying)
+        {
+            fireBallFlyingAudio.Stop();
         }
     }
 
