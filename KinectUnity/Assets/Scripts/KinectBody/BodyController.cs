@@ -8,6 +8,7 @@ public class BodyController : MonoBehaviour
 {
     private GameObject bodyManager;
     private GameObject fireBallController;
+    private GameObject lightningController;
 
     private GameObject root;
     private GameObject jointHead;
@@ -35,6 +36,7 @@ public class BodyController : MonoBehaviour
 
     private BodyManager bodyManagerScript;
     private FireBallController fireBallControllerScript;
+    private LightningController lightningControllerScript;
     private CoordinateMapper coordMapper;
 
     private Body[] bodyData;
@@ -93,6 +95,7 @@ public class BodyController : MonoBehaviour
     {
         bodyManager = GameObject.Find("BodyManager");
         fireBallController = GameObject.Find("FireBallController");
+        lightningController = GameObject.Find("LightningController");
 
         root = GameObject.Find("Remy");
         jointHead = GameObject.Find("mixamorig:Head");
@@ -419,6 +422,28 @@ public class BodyController : MonoBehaviour
         return rightHandMovingVel;
     }*/
 
+    private void UpdateLightnings(Body body)
+    {
+        if (lightningController == null)
+        {
+            return;
+        }
+
+        lightningControllerScript = lightningController.GetComponent<LightningController>();
+
+        if (lightningControllerScript == null)
+        {
+            print("Error: FireBallController script not found");
+
+            return;
+        }
+
+        lightningControllerScript.SetGestures(
+            jointArmWristLeft.transform.position,
+            jointArmElbowLeft.transform.position,
+            body.HandLeftState);
+    }
+    
     private void UpdateFireBall(Body body)
     {
         if (fireBallController == null)
@@ -428,7 +453,7 @@ public class BodyController : MonoBehaviour
 
         fireBallControllerScript = fireBallController.GetComponent<FireBallController>();
 
-        if (fireBallController == null)
+        if (fireBallControllerScript == null)
         {
             print("Error: FireBallController script not found");
 
@@ -438,15 +463,7 @@ public class BodyController : MonoBehaviour
         fireBallControllerScript.SetGestures(
             jointArmWristRight.transform.position,
             jointArmElbowRight.transform.position,
-            //GetRightHandMovingVel(body),
             body.HandRightState);
-
-        /*Vector3 fireBallPositionVec = new Vector3(
-            jointArmWristRight.transform.position.x,
-            jointArmWristRight.transform.position.y + 0.5f,
-            jointArmWristRight.transform.position.z);
-
-        fireBallEffect.transform.position = fireBallPositionVec;*/
     }
     
     // Update is called once per frame
@@ -523,6 +540,7 @@ public class BodyController : MonoBehaviour
                 RefreshJointOrientation(body);
                 UpdateBodyPos(body);
                 UpdateFireBall(body);
+                UpdateLightnings(body);
             }
         }
 
