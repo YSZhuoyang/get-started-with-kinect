@@ -33,6 +33,8 @@ public class BodyController : MonoBehaviour
     private GameObject jointArmElbowRight;
     private GameObject jointArmWristLeft;
     private GameObject jointArmWristRight;
+    private GameObject jointHandMiddleLeft;
+    private GameObject jointHandMiddleRight;
 
     private BodyManager bodyManagerScript;
     private FireBallController fireBallControllerScript;
@@ -123,6 +125,9 @@ public class BodyController : MonoBehaviour
         jointArmWristLeft = GameObject.Find("mixamorig:LeftHand");
         jointArmWristRight = GameObject.Find("mixamorig:RightHand");
 
+        jointHandMiddleLeft = GameObject.Find("mixamorig:LeftHandMiddle1");
+        jointHandMiddleRight = GameObject.Find("mixamorig:RightHandMiddle1");
+        
         //rightHandPreLoc = new Vector3();
         //rightHandCurrLoc = new Vector3();
     }
@@ -439,9 +444,14 @@ public class BodyController : MonoBehaviour
         }
 
         lightningControllerScript.SetGestures(
-            jointArmWristLeft.transform.position,
+            jointHandMiddleLeft.transform.position , 
             jointArmElbowLeft.transform.position,
             body.HandLeftState);
+
+        /*lightningControllerScript.SetGestures(
+            jointArmWristLeft.transform.position,
+            jointArmElbowLeft.transform.position,
+            body.HandLeftState);*/
     }
     
     private void UpdateFireBall(Body body)
@@ -461,7 +471,7 @@ public class BodyController : MonoBehaviour
         }
 
         fireBallControllerScript.SetGestures(
-            jointArmWristRight.transform.position,
+            jointHandMiddleRight.transform.position,
             jointArmElbowRight.transform.position,
             body.HandRightState);
     }

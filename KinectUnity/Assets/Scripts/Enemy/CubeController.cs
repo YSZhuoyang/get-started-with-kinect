@@ -3,26 +3,30 @@ using System.Collections;
 
 public class CubeController : MonoBehaviour
 {
+    private static ushort START_TIME = 3;
+    private static ushort MAX_NUMBER = 10;
+
+    private ushort numAlive;
 
 	// Use this for initialization
 	void Start()
     {
-	    
-	}
+        numAlive = 0;
+    }
 	
 	// Update is called once per frame
 	void Update()
     {
-	    if (GameObject.FindGameObjectWithTag("Enemy") == null)
+        if (Time.time > START_TIME && numAlive <= MAX_NUMBER)
         {
-            // Wait for several seconds
-
-
-            // Generate a new cube
             Instantiate(
                 Resources.Load<GameObject>("Cube"),
-                new Vector3(Random.Range(0f, 2f), Random.Range(0.2f, 1f), -6f), 
+                new Vector3(Random.Range(-5f, 5f), 
+                            Random.Range(2f, 8f), 
+                            Random.Range(-5f, 5f)),
                 Quaternion.identity);
         }
+
+        numAlive = (ushort) GameObject.FindGameObjectsWithTag("Enemy").Length;
 	}
 }

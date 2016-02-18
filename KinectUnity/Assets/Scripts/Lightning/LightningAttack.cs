@@ -4,8 +4,8 @@ using System.Collections;
 public class LightningAttack : MonoBehaviour
 {
     private static ushort NUM_SEGMENTS = 12;
-    private static float OFFSET_RANGE = 0.12f;
-    private static float END_POINT_OFFSET = 0.5f;
+    private static float OFFSET_RANGE = 0.1f;
+    private static float END_POINT_OFFSET = 0.1f;
     private static float INTERVAL = 0.05f;
     private static float LIFETIME = 1.3f;
 
@@ -20,7 +20,6 @@ public class LightningAttack : MonoBehaviour
     private Vector3 lightningVec;
 
     private LineRenderer lineRenderer;
-    //private SpriteRenderer
     private GameObject[] lightnings;
     private Vector3[] points;
 
@@ -83,38 +82,34 @@ public class LightningAttack : MonoBehaviour
 
             lightningControllerScript.SetLightningState(LightningController.LightningState.extinguished);
         }
-        else if (Time.time - lastFrameTime > INTERVAL)
+        else
         {
-            GenerateLightnings();
-            lastFrameTime = Time.time;
+            if (Time.time - lastFrameTime > INTERVAL)
+            {
+                GenerateLightnings();
+                lastFrameTime = Time.time;
+            }
+
+            /*RaycastHit hit;
+
+            if (Physics.Raycast(points[0], points[NUM_SEGMENTS - 1], out hit))
+            {
+                if (hit.transform.gameObject.tag == "Enemy")
+                {
+                    Destroy(hit.transform.gameObject);
+
+                    // Trigger explosion
+                    Instantiate(
+                        Resources.Load<GameObject>("Debris"),
+                        hit.transform.gameObject.transform.position,
+                        Quaternion.identity);
+                }
+            }*/
         }
     }
 
     void OnCollisionEnter(Collision col)
     {
-        /*fireBallController = GameObject.Find("FireBallController");
-
-        if (fireBallController == null)
-        {
-            print("Error: FireBallController game object not found");
-
-            return;
-        }
-
-        fireBallControllerScript = fireBallController.GetComponent<FireBallController>();
-
-        if (fireBallControllerScript == null)
-        {
-            print("Error: FireBallController script not found");
-
-            return;
-        }
-
-        fireBallControllerScript.SetFireBallState(FireBallController.FireBallState.extinguished);
-
-        // Stop audio playing
-        fireBallControllerScript.StopFlyingAudioPlaying();*/
-
         if (col.gameObject.tag == "Enemy")
         {
             Destroy(col.gameObject);

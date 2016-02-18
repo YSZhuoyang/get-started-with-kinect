@@ -5,7 +5,7 @@ using System.Collections;
 public class LightningController : MonoBehaviour
 {
     private static ushort NUM_LIGHTNINGS = 8;
-    private static float SLEEPING_PERIOD = 0.5f;
+    private static float DISTANCE_BETWEEN_ELBOW_AND_HAND = 0.4f;
 
     private Vector3 leftHandPosition;
     private Vector3 leftElbowPosition;
@@ -35,57 +35,84 @@ public class LightningController : MonoBehaviour
         lightningState = LightningState.extinguished;
     }
 
-    private void EnableLightning()
+    private void EnableLightningBall()
     {
-        if (!IsLightningEnabled() &&
+        if (!IsLightningBallEnabled() &&
             lightningState == LightningState.extinguished)
         {
             lightningBall = (GameObject) Instantiate(
                 Resources.Load<GameObject>("LightningBall"), 
                 leftHandPosition, 
                 Quaternion.identity);
+        }
+    }
 
+    private void DisableLightningBall()
+    {
+        if (IsLightningBallEnabled() &&
+            lightningState != LightningState.extinguished)
+        {
+            Destroy(lightningBall);
+        }
+    }
+
+    private void EnableLightning()
+    {
+        if (!IsLightningEnabled() && 
+            lightningState == LightningState.holding)
+        {
             for (ushort i = 0; i < NUM_LIGHTNINGS; i++)
             {
                 lightnings[i] = Instantiate(Resources.Load<GameObject>("Lightning"));
                 lightnings[i].GetComponent<LightningAttack>().SetStartPosAndEndPos(
-                    leftHandPosition, 
-                    leftHandPosition + (leftHandPosition - leftElbowPosition) * 8f);
+                    leftHandPosition,
+                    leftHandPosition + (leftHandPosition - leftElbowPosition) * 15f);
             }
-
-            lightningState = LightningState.exploding;
         }
     }
 
     private void DisableLightning()
     {
         if (IsLightningEnabled() &&
-            lightningState != LightningState.extinguished)
+            lightningState == LightningState.exploding)
         {
             for (ushort i = 0; i < NUM_LIGHTNINGS; i++)
             {
                 Destroy(lightnings[i]);
             }
-
-            lightningState = LightningState.extinguished;
         }
     }
 
     private void ResponseToGesture()
     {
-        if (Mathf.Abs(leftHandPosition.y - leftElbowPosition.y) < 1f &&
-            handLeftState == HandState.Open &&
-            lightningState == LightningState.extinguished)
+        if (leftHandPosition.y > leftElbowPosition.y - DISTANCE_BETWEEN_ELBOW_AND_HAND && 
+            handLeftState == HandState.Open)
         {
-            EnableLightning();
-        }
+            EnableLightningBall();
+            lightningState = LightningState.holding;
 
-        if ((Mathf.Abs(leftHandPosition.y - leftElbowPosition.y) > 1f ||
-            handLeftState == HandState.Closed) &&
-            lightningState == LightningState.exploding)
+            if (Mathf.Abs(leftHandPosition.y - leftElbowPosition.y) < DISTANCE_BETWEEN_ELBOW_AND_HAND)
+            {
+                EnableLightning();
+                lightningState = LightningState.exploding;
+            }
+            else if (lightningState == LightningState.exploding)
+            {
+                DisableLightning();
+                lightningState = LightningState.holding;
+            }
+        }
+        else
         {
             DisableLightning();
+            DisableLightningBall();
+            lightningState = LightningState.extinguished;
         }
+    }
+
+    private bool IsLightningBallEnabled()
+    {
+        return GameObject.Find("LightningBall(Clone)") != null;
     }
 
     private bool IsLightningEnabled()
@@ -98,18 +125,18 @@ public class LightningController : MonoBehaviour
     {
         ResponseToGesture();
 
-        if (lightningState == LightningState.holding)
+        if (lightningState != LightningState.extinguished)
         {
-            // Update fire ball position based on right hand position
-            //fireBallEffect.transform.position = fireBallCurrLoc;
-        }
-        else if (lightningState == LightningState.exploding)
-        {
-            for (ushort i = 0; i < NUM_LIGHTNINGS; i++)
+            lightningBall.transform.position = leftHandPosition;
+
+            if (lightningState == LightningState.exploding)
             {
-                lightnings[i].GetComponent<LightningAttack>().SetStartPosAndEndPos(
-                    leftHandPosition,
-                    leftHandPosition + (leftHandPosition - leftElbowPosition) * 4f);
+                for (ushort i = 0; i < NUM_LIGHTNINGS; i++)
+                {
+                    lightnings[i].GetComponent<LightningAttack>().SetStartPosAndEndPos(
+                        leftHandPosition,
+                        leftHandPosition + (leftHandPosition - leftElbowPosition) * 4f);
+                }
             }
         }
     }
