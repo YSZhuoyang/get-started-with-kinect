@@ -10,6 +10,7 @@ public class LightningController : MonoBehaviour
     private Vector3 leftHandPosition;
     private Vector3 leftElbowPosition;
 
+    private GameObject lightningBall;
     private GameObject[] lightnings;
     private UnityEngine.AudioSource lightningAudio;
 
@@ -26,7 +27,7 @@ public class LightningController : MonoBehaviour
     {
         leftHandPosition = new Vector3();
         leftElbowPosition = new Vector3();
-
+        
         lightnings = new GameObject[NUM_LIGHTNINGS];
         lightningAudio = GetComponent<UnityEngine.AudioSource>();
 
@@ -39,6 +40,11 @@ public class LightningController : MonoBehaviour
         if (!IsLightningEnabled() &&
             lightningState == LightningState.extinguished)
         {
+            lightningBall = (GameObject) Instantiate(
+                Resources.Load<GameObject>("LightningBall"), 
+                leftHandPosition, 
+                Quaternion.identity);
+
             for (ushort i = 0; i < NUM_LIGHTNINGS; i++)
             {
                 lightnings[i] = Instantiate(Resources.Load<GameObject>("Lightning"));
