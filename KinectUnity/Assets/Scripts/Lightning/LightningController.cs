@@ -5,7 +5,7 @@ using System.Collections;
 public class LightningController : MonoBehaviour
 {
     private static ushort NUM_LIGHTNINGS = 8;
-    private static float DISTANCE_BETWEEN_ELBOW_AND_HAND = 0.4f;
+    private static float DISTANCE_BETWEEN_ELBOW_AND_HAND_Y = 0.4f;
 
     private Vector3 leftHandPosition;
     private Vector3 leftElbowPosition;
@@ -85,13 +85,13 @@ public class LightningController : MonoBehaviour
 
     private void ResponseToGesture()
     {
-        if (leftHandPosition.y > leftElbowPosition.y - DISTANCE_BETWEEN_ELBOW_AND_HAND && 
+        if (leftHandPosition.y > (leftElbowPosition.y - DISTANCE_BETWEEN_ELBOW_AND_HAND_Y) && 
             handLeftState == HandState.Open)
         {
             EnableLightningBall();
             lightningState = LightningState.holding;
 
-            if (Mathf.Abs(leftHandPosition.y - leftElbowPosition.y) < DISTANCE_BETWEEN_ELBOW_AND_HAND)
+            if (Mathf.Abs(leftHandPosition.y - leftElbowPosition.y) < DISTANCE_BETWEEN_ELBOW_AND_HAND_Y)
             {
                 EnableLightning();
                 lightningState = LightningState.exploding;
@@ -102,7 +102,9 @@ public class LightningController : MonoBehaviour
                 lightningState = LightningState.holding;
             }
         }
-        else
+        
+        if (leftHandPosition.y < (leftElbowPosition.y - DISTANCE_BETWEEN_ELBOW_AND_HAND_Y) ||
+            handLeftState == HandState.Closed)
         {
             DisableLightning();
             DisableLightningBall();

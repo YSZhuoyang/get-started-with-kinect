@@ -53,6 +53,24 @@ public class LightningAttack : MonoBehaviour
         }
 
         GetComponent<LineRenderer>().SetPositions(points);
+
+        /*RaycastHit hit;
+
+        if (Physics.Raycast(points[NUM_SEGMENTS - 1], points[0], out hit))
+        {
+            print("detected");
+
+            if (hit.transform.gameObject.tag == "Enemy")
+            {
+                Destroy(hit.transform.gameObject);
+
+                // Trigger explosion
+                Instantiate(
+                    Resources.Load<GameObject>("Debris"),
+                    hit.transform.gameObject.transform.position,
+                    Quaternion.identity);
+            }
+        }*/
     }
 	
 	// Update is called once per frame
@@ -89,22 +107,6 @@ public class LightningAttack : MonoBehaviour
                 GenerateLightnings();
                 lastFrameTime = Time.time;
             }
-
-            /*RaycastHit hit;
-
-            if (Physics.Raycast(points[0], points[NUM_SEGMENTS - 1], out hit))
-            {
-                if (hit.transform.gameObject.tag == "Enemy")
-                {
-                    Destroy(hit.transform.gameObject);
-
-                    // Trigger explosion
-                    Instantiate(
-                        Resources.Load<GameObject>("Debris"),
-                        hit.transform.gameObject.transform.position,
-                        Quaternion.identity);
-                }
-            }*/
         }
     }
 
