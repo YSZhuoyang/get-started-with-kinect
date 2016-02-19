@@ -413,20 +413,7 @@ public class BodyController : MonoBehaviour
         
         return rotationOut;
     }
-
-    /*private Vector3 GetRightHandMovingVel(Body body)
-    {
-        rightHandCurrLoc.x = body.Joints[JointType.HandRight].Position.X;
-        rightHandCurrLoc.y = body.Joints[JointType.HandRight].Position.Y;
-        rightHandCurrLoc.z = body.Joints[JointType.HandRight].Position.Z;
-
-        Vector3 rightHandMovingVel = rightHandCurrLoc - rightHandPreLoc;
-
-        rightHandPreLoc = rightHandCurrLoc;
-
-        return rightHandMovingVel;
-    }*/
-
+    
     private void UpdateLightnings(Body body)
     {
         if (lightningController == null)
@@ -447,11 +434,6 @@ public class BodyController : MonoBehaviour
             jointHandMiddleLeft.transform.position , 
             jointArmElbowLeft.transform.position,
             body.HandLeftState);
-
-        /*lightningControllerScript.SetGestures(
-            jointArmWristLeft.transform.position,
-            jointArmElbowLeft.transform.position,
-            body.HandLeftState);*/
     }
     
     private void UpdateFireBall(Body body)

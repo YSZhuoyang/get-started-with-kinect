@@ -54,12 +54,16 @@ public class LightningAttack : MonoBehaviour
 
         GetComponent<LineRenderer>().SetPositions(points);
 
-        /*RaycastHit hit;
+        // Collision detection of lightnings through ray cast
+        RaycastHit hit;
+        Vector3 direction = points[NUM_SEGMENTS - 1] - points[0];
+        float distance = Mathf.Sqrt(
+            direction.x * direction.x + 
+            direction.y * direction.y + 
+            direction.z* direction.z);
 
-        if (Physics.Raycast(points[NUM_SEGMENTS - 1], points[0], out hit))
+        if (Physics.Raycast(points[0], direction, out hit, distance))
         {
-            print("detected");
-
             if (hit.transform.gameObject.tag == "Enemy")
             {
                 Destroy(hit.transform.gameObject);
@@ -70,7 +74,7 @@ public class LightningAttack : MonoBehaviour
                     hit.transform.gameObject.transform.position,
                     Quaternion.identity);
             }
-        }*/
+        }
     }
 	
 	// Update is called once per frame
@@ -109,24 +113,7 @@ public class LightningAttack : MonoBehaviour
             }
         }
     }
-
-    void OnCollisionEnter(Collision col)
-    {
-        if (col.gameObject.tag == "Enemy")
-        {
-            Destroy(col.gameObject);
-
-            // Trigger explosion
-            //Instantiate(Resources.Load<GameObject>("Explosion"), col.transform.position, Quaternion.identity);
-            Instantiate(Resources.Load<GameObject>("Debris"), col.transform.position, Quaternion.identity);
-        }
-        else
-        {
-            // Trigger explosion
-            //Instantiate(Resources.Load<GameObject>("Explosion"), transform.position, Quaternion.identity);
-        }
-    }
-
+    
     public void SetStartPosAndEndPos(Vector3 startPosIn, Vector3 endPosIn)
     {
         startPos = startPosIn;
