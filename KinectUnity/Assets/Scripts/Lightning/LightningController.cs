@@ -5,7 +5,7 @@ using System.Collections;
 public class LightningController : MonoBehaviour
 {
     private static ushort NUM_LIGHTNINGS = 8;
-    private static float DISTANCE_BETWEEN_ELBOW_AND_HAND_Y = 0.4f;
+    private static float DISTANCE_BETWEEN_ELBOW_AND_HAND_Y = 0.5f;
 
     private Vector3 leftHandPosition;
     private Vector3 leftElbowPosition;
@@ -30,6 +30,7 @@ public class LightningController : MonoBehaviour
         
         lightnings = new GameObject[NUM_LIGHTNINGS];
         lightningAudio = GetComponent<UnityEngine.AudioSource>();
+        lightningAudio.Stop();
 
         handLeftState = HandState.Closed;
         lightningState = LightningState.extinguished;
@@ -66,7 +67,12 @@ public class LightningController : MonoBehaviour
                 lightnings[i] = Instantiate(Resources.Load<GameObject>("Lightning"));
                 lightnings[i].GetComponent<LightningAttack>().SetStartPosAndEndPos(
                     leftHandPosition,
-                    leftHandPosition + (leftHandPosition - leftElbowPosition) * 15f);
+                    leftHandPosition + (leftHandPosition - leftElbowPosition) * 20f);
+            }
+
+            if (!lightningAudio.isPlaying)
+            {
+                lightningAudio.Play();
             }
         }
     }
@@ -79,6 +85,11 @@ public class LightningController : MonoBehaviour
             for (ushort i = 0; i < NUM_LIGHTNINGS; i++)
             {
                 Destroy(lightnings[i]);
+            }
+
+            if (lightningAudio.isPlaying)
+            {
+                lightningAudio.Stop();
             }
         }
     }

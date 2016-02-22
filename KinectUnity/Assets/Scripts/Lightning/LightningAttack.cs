@@ -46,7 +46,7 @@ public class LightningAttack : MonoBehaviour
 
         for (ushort i = 1; i < NUM_SEGMENTS - 1; i++)
         {
-            points[i] = points[0] + i * lightningVec / 11f + new Vector3(
+            points[i] = points[0] + i * lightningVec / (NUM_SEGMENTS - 1f) + new Vector3(
                 Random.Range(-OFFSET_RANGE, OFFSET_RANGE),
                 Random.Range(-OFFSET_RANGE, OFFSET_RANGE),
                 Random.Range(-OFFSET_RANGE, OFFSET_RANGE));
