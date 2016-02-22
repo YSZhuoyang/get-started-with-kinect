@@ -1,22 +1,36 @@
 using UnityEngine;
 using System.Collections;
 using Windows.Kinect;
+using Microsoft.Kinect.Face;
+using System.Collections.Generic;
 
 // Receiving (frame) data from kinect
 public class BodyManager : MonoBehaviour
 {
     private const ushort BYTEPERPIXEL = 4;
 
+    private GameObject faceController;
+    private HDFaceController faceControllerScript;
+
     private KinectSensor sensor;
     private MultiSourceFrameReader reader;
+
+    private HighDefinitionFaceFrameReader faceReader;
+    private HighDefinitionFaceFrameSource faceFrameSource;
+    private FaceAlignment faceAlignment;
+    private FaceModel faceModel;
 
     private Body[] bodyData;
     private byte[] colorData;
     private ushort[] depthData;
     private CameraSpacePoint[] camPoints;
+    private CameraSpacePoint[] faceCamPoints;
 
     private uint depthWidth;
     private uint depthHeight;
+
+    private uint colorWidth;
+    private uint colorHeight;
 
     CoordinateMapper coordMapper;
 
@@ -38,6 +52,11 @@ public class BodyManager : MonoBehaviour
     public CameraSpacePoint[] GetCameraSpaceData()
     {
         return camPoints;
+    }
+
+    public CameraSpacePoint[] GetFacePointCloud()
+    {
+        return faceCamPoints;
     }
 
     public uint GetDepthWidth()
@@ -62,11 +81,13 @@ public class BodyManager : MonoBehaviour
         colorData = null;
         depthData = null;
         camPoints = null;
+        faceCamPoints = null;
 
         sensor = KinectSensor.GetDefault();
 
         if (sensor != null)
         {
+            // Obtain color, depth, body skeleton data from multi sources reader
             reader = sensor.OpenMultiSourceFrameReader(
                 //FrameSourceTypes.Infrared |
                 FrameSourceTypes.Color |
@@ -76,11 +97,20 @@ public class BodyManager : MonoBehaviour
 
             FrameDescription colorFD = sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Rgba);
             colorData = new byte[colorFD.LengthInPixels * BYTEPERPIXEL];
+            colorWidth = (uint) colorFD.Width;
+            colorHeight = (uint) colorFD.Height;
 
             FrameDescription depthFD = sensor.DepthFrameSource.FrameDescription;
             depthData = new ushort[depthFD.LengthInPixels];
-            depthWidth = (uint)depthFD.Width;
-            depthHeight = (uint)depthFD.Height;
+            depthWidth = (uint) depthFD.Width;
+            depthHeight = (uint) depthFD.Height;
+
+            // Get face frame source data
+            faceFrameSource = HighDefinitionFaceFrameSource.Create(sensor);
+            faceReader = faceFrameSource.OpenReader();
+
+            faceModel = FaceModel.Create();
+            faceAlignment = FaceAlignment.Create();
 
             coordMapper = sensor.CoordinateMapper;
 
@@ -89,6 +119,8 @@ public class BodyManager : MonoBehaviour
                 sensor.Open();
             }
         }
+
+        faceController = GameObject.Find("HDFaceController");
     }
 	
 	// Update is called once per frame
@@ -112,6 +144,18 @@ public class BodyManager : MonoBehaviour
                 {
                     bodyFrame.GetAndRefreshBodyData(bodyData);
                     bodyFrame.Dispose();
+
+                    // Assume only one body and one face detected
+                    for (int i = 0; i < bodyData.Length; i++)
+                    {
+                        if (bodyData[i].IsTracked)
+                        {
+                            if (!faceFrameSource.IsTrackingIdValid)
+                            {
+                                faceFrameSource.TrackingId = bodyData[i].TrackingId;
+                            }
+                        }
+                    }
                 }
                 
                 ColorFrame colorFrame = frame.ColorFrameReference.AcquireFrame();
@@ -132,7 +176,22 @@ public class BodyManager : MonoBehaviour
                     camPoints = new CameraSpacePoint[depthData.Length];
                     coordMapper.MapDepthFrameToCameraSpace(depthData, camPoints);
                 }
-                
+
+                // Get faceHD data
+                if (faceReader != null)
+                {
+                    var faceFrame = faceReader.AcquireLatestFrame();
+
+                    if (faceFrame != null && faceFrame.IsFaceTracked)
+                    {
+                        faceFrame.GetAndRefreshFaceAlignmentResult(faceAlignment);
+                        UpdateFaceData();
+
+                        faceFrame.Dispose();
+                        faceFrame = null;
+                    }
+                }
+
                 bodyFrame = null;
                 colorFrame = null;
                 depthFrame = null;
@@ -141,12 +200,62 @@ public class BodyManager : MonoBehaviour
         }
     }
 
+    private void UpdateFaceData()
+    {
+        if (faceModel == null)
+        {
+            return;
+        }
+
+        IList<CameraSpacePoint> facePointList = faceModel.CalculateVerticesForAlignment(faceAlignment);
+
+        faceCamPoints = new CameraSpacePoint[facePointList.Count];
+        Vector3[] facePoints = new Vector3[facePointList.Count];
+        ColorSpacePoint[] colorPoints = new ColorSpacePoint[facePointList.Count];
+        UnityEngine.Color[] colors = new UnityEngine.Color[facePointList.Count];
+        uint[] indices = new uint[FaceModel.TriangleIndices.Count];
+        FaceModel.TriangleIndices.CopyTo(indices, 0);
+        int baseIndex;
+
+        facePointList.CopyTo(faceCamPoints, 0);
+        coordMapper.MapCameraPointsToColorSpace(faceCamPoints, colorPoints);
+        
+        for (int i = 0; i < facePointList.Count; i++)
+        {
+            facePoints[i].x = faceCamPoints[i].X;
+            facePoints[i].y = faceCamPoints[i].Y;
+            facePoints[i].z = faceCamPoints[i].Z;
+            
+            baseIndex = ((int) colorPoints[i].X + (int) colorPoints[i].Y * (int) colorWidth) * 4;
+
+            colors[i].r = colorData[baseIndex] / 255f;
+            colors[i].g = colorData[baseIndex + 1] / 255f;
+            colors[i].b = colorData[baseIndex + 2] / 255f;
+            colors[i].a = 1.0f;
+        }
+        
+        faceControllerScript = faceController.GetComponent<HDFaceController>();
+
+        if (faceControllerScript == null)
+        {
+            return;
+        }
+
+        faceControllerScript.CreateMesh(facePoints, indices, colors);
+    }
+
     void OnApplicationQuit()
     {
         if (reader != null)
         {
             reader.Dispose();
             reader = null;
+        }
+
+        if (faceReader != null)
+        {
+            faceReader.Dispose();
+            faceReader = null;
         }
         
         if (sensor != null)
