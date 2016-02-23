@@ -69,6 +69,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Enemy\CubeCollision.cs" />
     <Compile Include="Assets\Scripts\Enemy\CubeController.cs" />
     <Compile Include="Assets\Scripts\Enemy\DebrisController.cs" />
     <Compile Include="Assets\Scripts\FireBall\ExplosionController.cs" />

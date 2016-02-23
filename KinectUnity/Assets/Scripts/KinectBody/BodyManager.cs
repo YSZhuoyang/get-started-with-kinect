@@ -202,7 +202,7 @@ public class BodyManager : MonoBehaviour
 
     private void UpdateFaceData()
     {
-        if (faceModel == null)
+        if (faceController == null || faceModel == null)
         {
             return;
         }

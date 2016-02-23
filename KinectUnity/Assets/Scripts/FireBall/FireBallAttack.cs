@@ -51,7 +51,7 @@ public class FireBallAttack : MonoBehaviour
             
             // Trigger explosion
             Instantiate(Resources.Load<GameObject>("Explosion"), col.transform.position, Quaternion.identity);
-            Instantiate(Resources.Load<GameObject>("Debris"), col.transform.position, Quaternion.identity);
+            //Instantiate(Resources.Load<GameObject>("Debris"), col.transform.position, Quaternion.identity);
         }
         else
         {

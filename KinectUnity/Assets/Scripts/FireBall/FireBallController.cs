@@ -7,6 +7,7 @@ public class FireBallController : MonoBehaviour
     private static float FLYING_MAX_DURATION = 2f;
     private static float SHOOTING_GESTURE_MAX_DURATION = 0.4f;
     private static float SHOOTING_GESTURE_MAX_DISTANCE = 0.4f;
+    private static float DISTANCE_BETWEEN_ELBOW_AND_HAND_Y = 0.5f;
 
     private float flyingStartTime;
     private float shootingGestureStartTime;
@@ -81,14 +82,14 @@ public class FireBallController : MonoBehaviour
 
     private void ResponseToGesture()
     {
-        if (rightHandPosition.y > rightElbowPosition.y && 
+        if (rightHandPosition.y > (rightElbowPosition.y - DISTANCE_BETWEEN_ELBOW_AND_HAND_Y) && 
             handRightState == HandState.Open && 
             fireBallState == FireBallState.extinguished)
         {
             EnableFireBall();
         }
-
-        if ((rightElbowPosition.y > rightHandPosition.y || handRightState == HandState.Closed) && 
+        else if ((rightHandPosition.y < (rightElbowPosition.y - DISTANCE_BETWEEN_ELBOW_AND_HAND_Y) || 
+            handRightState == HandState.Closed) && 
             fireBallState == FireBallState.holding)
         {
             DisableFireBall();
