@@ -212,12 +212,12 @@ public class BodyController : MonoBehaviour
                     break;
 
                 case JointType.Neck:
-                    jointSpineUpper.transform.rotation =
+                    jointSpineUpper.transform.rotation = 
                         ConvertCoordSysFromKinectToUnity(localRotation);
                     break;
 
                 case JointType.Head:
-                    jointNeck.transform.rotation =
+                    jointHead.transform.rotation = localRotation;
                         ConvertCoordSysFromKinectToUnity(localRotation);
                     break;
                     

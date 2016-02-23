@@ -72,6 +72,7 @@
     <Compile Include="Assets\Scripts\Enemy\CubeCollision.cs" />
     <Compile Include="Assets\Scripts\Enemy\CubeController.cs" />
     <Compile Include="Assets\Scripts\Enemy\DebrisController.cs" />
+    <Compile Include="Assets\Scripts\Enemy\HitCounter.cs" />
     <Compile Include="Assets\Scripts\FireBall\ExplosionController.cs" />
     <Compile Include="Assets\Scripts\FireBall\FireBallAttack.cs" />
     <Compile Include="Assets\Scripts\FireBall\FireBallController.cs" />

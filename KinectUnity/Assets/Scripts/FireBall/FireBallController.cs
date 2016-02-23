@@ -6,7 +6,7 @@ public class FireBallController : MonoBehaviour
 {
     private static float FLYING_MAX_DURATION = 2f;
     private static float SHOOTING_GESTURE_MAX_DURATION = 0.4f;
-    private static float SHOOTING_GESTURE_MAX_DISTANCE = 0.4f;
+    private static float SHOOTING_GESTURE_MIN_DISTANCE = 0.3f;
     private static float DISTANCE_BETWEEN_ELBOW_AND_HAND_Y = 0.5f;
 
     private float flyingStartTime;
@@ -123,7 +123,7 @@ public class FireBallController : MonoBehaviour
                         movingVec.y * movingVec.y +
                         movingVec.z * movingVec.z);
 
-                    if (movingLength > SHOOTING_GESTURE_MAX_DISTANCE)
+                    if (movingLength > SHOOTING_GESTURE_MIN_DISTANCE)
                     {
                         fireBallState = FireBallState.flying;
                         flyingStartTime = Time.time;

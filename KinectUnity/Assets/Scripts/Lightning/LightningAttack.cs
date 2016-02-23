@@ -10,7 +10,10 @@ public class LightningAttack : MonoBehaviour
     private static float LIFETIME = 1.3f;
 
     private GameObject lightningController;
+    private GameObject billboard;
+
     private LightningController lightningControllerScript;
+    private HitCounter hitCounter;
 
     private float startTime;
     private float lastFrameTime;
@@ -32,7 +35,9 @@ public class LightningAttack : MonoBehaviour
         points = new Vector3[NUM_SEGMENTS];
         startPos = new Vector3();
         endPos = new Vector3();
-	}
+
+        billboard = GameObject.Find("Billboard");
+    }
 
     private void GenerateLightnings()
     {
@@ -73,6 +78,14 @@ public class LightningAttack : MonoBehaviour
                     Resources.Load<GameObject>("Debris"),
                     hit.transform.gameObject.transform.position,
                     Quaternion.identity);
+
+                // Update billboard
+                hitCounter = billboard.GetComponent<HitCounter>();
+
+                if (hitCounter != null)
+                {
+                    hitCounter.FireBallHit();
+                }
             }
         }
     }

@@ -23,7 +23,7 @@ public class CubeController : MonoBehaviour
                 Resources.Load<GameObject>("Cube"),
                 new Vector3(Random.Range(-5f, 5f), 
                             Random.Range(2f, 8f), 
-                            Random.Range(-5f, 5f)),
+                            Random.Range(-6f, -0.5f)),
                 Quaternion.identity);
         }
 
