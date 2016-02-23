@@ -50,8 +50,6 @@ public class FireBallAttack : MonoBehaviour
 
         if (col.gameObject.tag == "Enemy")
         {
-            Destroy(col.gameObject);
-            
             // Trigger explosion
             Instantiate(Resources.Load<GameObject>("Explosion"), col.transform.position, Quaternion.identity);
 

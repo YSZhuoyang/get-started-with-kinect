@@ -25,7 +25,10 @@ public class CubeCollision : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        Destroy(gameObject);
-        Instantiate(Resources.Load<GameObject>("Debris"), transform.position, Quaternion.identity);
+        if (col.gameObject.tag != "Enemy")
+        {
+            Destroy(gameObject);
+            Instantiate(Resources.Load<GameObject>("Debris"), transform.position, Quaternion.identity);
+        }
     }
 }
