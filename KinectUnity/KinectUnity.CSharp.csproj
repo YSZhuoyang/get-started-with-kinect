@@ -72,7 +72,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\CanvasRenderer.cs" />
+    <Compile Include="Assets\Scripts\CanvasRenderer.cs" />
     <Compile Include="Assets\Scripts\Enemy\CubeCollision.cs" />
     <Compile Include="Assets\Scripts\Enemy\CubeController.cs" />
     <Compile Include="Assets\Scripts\Enemy\DebrisController.cs" />
@@ -83,9 +83,9 @@
     <Compile Include="Assets\Scripts\FireBall\FireBallTrailerController.cs" />
     <Compile Include="Assets\Scripts\HDFaceController.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyController.cs" />
-    <Compile Include="Assets\Scripts\KinectBody\BodyManager.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyStub.cs" />
     <Compile Include="Assets\Scripts\KinectBody\BodyView.cs" />
+    <Compile Include="Assets\Scripts\KinectBody\SourceManager.cs" />
     <Compile Include="Assets\Scripts\Lightning\LightningAttack.cs" />
     <Compile Include="Assets\Scripts\Lightning\LightningController.cs" />
     <Compile Include="Assets\Scripts\RoomMeshRenderer.cs" />

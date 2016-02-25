@@ -5,7 +5,7 @@ using Microsoft.Kinect.Face;
 using System.Collections.Generic;
 
 // Receiving (frame) data from kinect
-public class BodyManager : MonoBehaviour
+public class SourceManager : MonoBehaviour
 {
     private const ushort BYTEPERPIXEL = 4;
 
@@ -32,7 +32,8 @@ public class BodyManager : MonoBehaviour
     private uint colorWidth;
     private uint colorHeight;
 
-    CoordinateMapper coordMapper;
+    private Texture2D colorFrameTex;
+    private CoordinateMapper coordMapper;
 
     public Body[] GetBodyData()
     {
@@ -67,6 +68,21 @@ public class BodyManager : MonoBehaviour
     public uint GetDepthHeight()
     {
         return depthHeight;
+    }
+
+    public uint GetColorWidth()
+    {
+        return colorWidth;
+    }
+
+    public uint GetColorHeight()
+    {
+        return colorHeight;
+    }
+
+    public Texture2D GetColorFrameTex()
+    {
+        return colorFrameTex;
     }
 
     public CoordinateMapper GetCoordMapper()
@@ -104,6 +120,9 @@ public class BodyManager : MonoBehaviour
             depthData = new ushort[depthFD.LengthInPixels];
             depthWidth = (uint) depthFD.Width;
             depthHeight = (uint) depthFD.Height;
+
+            // Init textures
+            colorFrameTex = new Texture2D((int) colorWidth, (int) colorHeight, TextureFormat.RGBA32, false);
 
             // Get face frame source data
             faceFrameSource = HighDefinitionFaceFrameSource.Create(sensor);
@@ -158,12 +177,16 @@ public class BodyManager : MonoBehaviour
                     }
                 }
                 
+                // Get color data
                 ColorFrame colorFrame = frame.ColorFrameReference.AcquireFrame();
 
                 if (colorFrame != null)
                 {
                     colorFrame.CopyConvertedFrameDataToArray(colorData, ColorImageFormat.Rgba);
                     colorFrame.Dispose();
+
+                    colorFrameTex.LoadRawTextureData(colorData);
+                    colorFrameTex.Apply();
                 }
 
                 DepthFrame depthFrame = frame.DepthFrameReference.AcquireFrame();

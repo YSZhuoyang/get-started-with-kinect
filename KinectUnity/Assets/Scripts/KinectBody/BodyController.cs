@@ -36,7 +36,7 @@ public class BodyController : MonoBehaviour
     private GameObject jointHandMiddleLeft;
     private GameObject jointHandMiddleRight;
 
-    private BodyManager bodyManagerScript;
+    private SourceManager sourceManagerScript;
     private FireBallController fireBallControllerScript;
     private LightningController lightningControllerScript;
     private CoordinateMapper coordMapper;
@@ -95,7 +95,7 @@ public class BodyController : MonoBehaviour
 
     void Start()
     {
-        bodyManager = GameObject.Find("BodyManager");
+        bodyManager = GameObject.Find("SourceManager");
         fireBallController = GameObject.Find("FireBallController");
         lightningController = GameObject.Find("LightningController");
 
@@ -468,20 +468,20 @@ public class BodyController : MonoBehaviour
             return;
         }
 
-        bodyManagerScript = bodyManager.GetComponent<BodyManager>();
+        sourceManagerScript = bodyManager.GetComponent<SourceManager>();
 
-        if (bodyManagerScript == null)
+        if (sourceManagerScript == null)
         {
             return;
         }
 
-        bodyData = bodyManagerScript.GetBodyData();
-        colorData = bodyManagerScript.GetColorData();
-        depthData = bodyManagerScript.GetDepthData();
+        bodyData = sourceManagerScript.GetBodyData();
+        colorData = sourceManagerScript.GetColorData();
+        depthData = sourceManagerScript.GetDepthData();
 
-        depthWidth = bodyManagerScript.GetDepthWidth();
-        depthHeight = bodyManagerScript.GetDepthHeight();
-        coordMapper = bodyManagerScript.GetCoordMapper();
+        depthWidth = sourceManagerScript.GetDepthWidth();
+        depthHeight = sourceManagerScript.GetDepthHeight();
+        coordMapper = sourceManagerScript.GetCoordMapper();
 
         if (bodyData == null)
         {

@@ -8,9 +8,9 @@ using Windows.Kinect;
 public class BodyView : MonoBehaviour
 {
     public Material boneMaterial;
-    public GameObject bodyManager;
+    public GameObject sourceManager;
 
-    private BodyManager bodyManagerScript;
+    private SourceManager sourceManagerScript;
     private Dictionary<ulong, GameObject> bodyMap = new Dictionary<ulong, GameObject>();
     private Dictionary<JointType, JointType> boneMap = new Dictionary<JointType, JointType>()
     {
@@ -132,19 +132,19 @@ public class BodyView : MonoBehaviour
     {
         //int state = 0;
 
-        if (bodyManager == null)
+        if (sourceManager == null)
         {
             return;
         }
 
-        bodyManagerScript = bodyManager.GetComponent<BodyManager>();
+        sourceManagerScript = sourceManager.GetComponent<SourceManager>();
 
-        if (bodyManagerScript == null)
+        if (sourceManagerScript == null)
         {
             return;
         }
 
-        Body[] bodyData = bodyManagerScript.GetBodyData();
+        Body[] bodyData = sourceManagerScript.GetBodyData();
 
         if (bodyData == null)
         {

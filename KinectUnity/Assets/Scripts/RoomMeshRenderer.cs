@@ -6,8 +6,8 @@ public class RoomMeshRenderer : MonoBehaviour
 {
     private static int NUMVERTICESPERMESH = 60000;
 
-    private GameObject bodyManager;
-    private BodyManager bodyManagerScript;
+    private GameObject sourceManager;
+    private SourceManager sourceManagerScript;
     
     public Material roomMaterial;
 
@@ -22,7 +22,7 @@ public class RoomMeshRenderer : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        bodyManager = GameObject.Find("BodyManager");
+        sourceManager = GameObject.Find("SourceManager");
     }
 
     private void BuildMeshs(CameraSpacePoint[] camPoints)
@@ -90,22 +90,22 @@ public class RoomMeshRenderer : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        if (bodyManager == null)
+        if (sourceManager == null)
         {
             return;
         }
 
-        bodyManagerScript = bodyManager.GetComponent<BodyManager>();
+        sourceManagerScript = sourceManager.GetComponent<SourceManager>();
 
-        if (bodyManagerScript == null)
+        if (sourceManagerScript == null)
         {
-            print("Error: bodyManager script not found");
+            print("Error: SourceManager script not found");
 
             return;
         }
 
-        coordMapper = bodyManagerScript.GetCoordMapper();
-        camPoints = bodyManagerScript.GetCameraSpaceData();
+        coordMapper = sourceManagerScript.GetCoordMapper();
+        camPoints = sourceManagerScript.GetCameraSpaceData();
 
         if (camPoints == null)
         {
